@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/libeddystoneeidr/libeddystoneeidr.iml" filepath="$PROJECT_DIR$/libeddystoneeidr/libeddystoneeidr.iml" />
+      <module fileurl="file://$PROJECT_DIR$/libproximitybeacon/libproximitybeacon.iml" filepath="$PROJECT_DIR$/libproximitybeacon/libproximitybeacon.iml" />
+      <module fileurl="file://$PROJECT_DIR$/nrf-beacon-nearby.iml" filepath="$PROJECT_DIR$/nrf-beacon-nearby.iml" />
+    </modules>
+  </component>
+</project>

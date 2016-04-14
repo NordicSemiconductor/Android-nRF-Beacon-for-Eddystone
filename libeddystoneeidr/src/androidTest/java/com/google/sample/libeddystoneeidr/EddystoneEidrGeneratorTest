@@ -1,0 +1,213 @@
+// Copyright 2015 Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package com.google.sample.libeddystoneeidr;
+
+import android.test.AndroidTestCase;
+
+import java.util.Arrays;
+
+/**
+ * Unit tests for the EddystoneEidrGenerator class.
+ */
+public class EddystoneEidrGeneratorTest extends AndroidTestCase {
+
+  private static final int TIMESTAMP_SECONDS = 305419896;  // 0x12345678
+  private static final int ROTATION_PERIOD_EXPONENT = 12;
+
+  public void testBadKeyLengths() {
+    // Input to ctor must be a 32-byte key.
+    try {
+      new EddystoneEidrGenerator(new byte[31]);
+      fail();
+    } catch (IllegalArgumentException e) {
+      // expected
+    }
+
+    try {
+      new EddystoneEidrGenerator(new byte[33]);
+      fail();
+    } catch (IllegalArgumentException e) {
+      // expected
+    }
+
+    assertNotNull(new EddystoneEidrGenerator(new byte[32]));
+  }
+
+  public void testBadRotationPeriodExponents() {
+    EddystoneEidrGenerator eidrGenerator = new EddystoneEidrGenerator(new byte[32]);
+
+    assertNotNull(eidrGenerator.getEidr(EddystoneEidrGenerator.MIN_ROTATION_PERIOD_EXPONENT, 0));
+    assertNotNull(eidrGenerator.getEidr(EddystoneEidrGenerator.MAX_ROTATION_PERIOD_EXPONENT, 0));
+
+    try {
+      eidrGenerator.getEidr(EddystoneEidrGenerator.MIN_ROTATION_PERIOD_EXPONENT - 1, 0);
+      fail();
+    } catch (IllegalArgumentException e) {
+      // expected
+    }
+
+    try {
+      eidrGenerator.getEidr(EddystoneEidrGenerator.MAX_ROTATION_PERIOD_EXPONENT + 1, 0);
+      fail();
+    } catch (IllegalArgumentException e) {
+      // expected
+    }
+  }
+
+  /**
+   * Verifies the step-by-step computation of an EIDR identifier by comparing the results
+   * with known-valid test vectors.
+   */
+  public void testVectors() throws Exception {
+    verifyTestVectors(
+        "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff",
+        "5028d027aab146c78da0ef60d1c71bf49e60e7b876359cac1e5ed7848c8b3544",
+        "265aabc27a7f5a040674ebbc43c8888da368024f07979805aa81ff67e9dd573f",
+        "671b307404d0f848608c90c282bb1f63d50edd24f944f3484e6515c8615ba16b",
+        "2fcc73b2346d15adb806ea799431d3c0",
+        "0000000000000000000000ff00001234",
+        "e044e53c18f88a29ba60b158228bc53d",
+        "00000000000000000000000c12345000",
+        "3d9120f528cc1496"
+        );
+
+    verifyTestVectors(
+        "0123012301230123012301230123012301230123012301230123012301230123",
+        "e8bdce340fc48a7ee282be4fa76670e33804a86d7710e84c540a36adfe46887d",
+        "6a44a2d93d11a706077a3cba3a196915172a0cfa4fd2630221d716302e5cdf6b",
+        "c659d22a1ddb8023db0aa94ff7e888d58b038ed656341fec1ee25b14a8436d30",
+        "8d6979d8b8f61b96f47660c457e2a492",
+        "0000000000000000000000ff00001234",
+        "d4df44318e3cc3cbabdd2b4acad29080",
+        "00000000000000000000000c12345000",
+        "bc75d7ffcf53a3ad"
+    );
+
+    verifyTestVectors(
+        "ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00",
+        "d8ba610b1df2c10fd99701cce3d3bb460abf7c11e9214b1b2cad0d359845a569",
+        "f6641f420aa29eb1d943b8de712fbeb2fcd824dcf9115e6b5713b1a1b996d861",
+        "1354a9d4b0a842f089709ad3d21446821705b8f9fc0ed353759180fb17d8a52f",
+        "044d6ee9421f36c7c90264fc3230750f",
+        "0000000000000000000000ff00001234",
+        "d389fa8e03888e716919614c0b460d11",
+        "00000000000000000000000c12345000",
+        "bb7419847bc27761"
+    );
+
+    verifyTestVectors(
+        "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210",
+        "80ea81cce5d42806b9dedec577202e54a6c291c6eb02412de52e47d8a6ae2853",
+        "a99d1d6cb9d529f85d6c778489d7314a4a3f7dd297f86dd44ad4c95a92c3ac57",
+        "2abdc590dc4802c2722ad55a99d7a253c5b412dfd9c6ef3edbba555ca6141079",
+        "d065f7b189e6a89b5137c8591a5ba938",
+        "0000000000000000000000ff00001234",
+        "7a0ec16e378a4c576ea8c43ed86226c5",
+        "00000000000000000000000c12345000",
+        "818274bfbceb8d3b"
+    );
+  }
+
+  private void verifyTestVectors(
+      String serviceEcdhPublicKey,
+      String beaconPrivateKey,
+      String expectedBeaconPublicKey,
+      String expectedSharedKey,
+      String expectedIdentityKey,
+      String expectedTemporaryKeyData,
+      String expectedTemporaryKey,
+      String expectedEidrData,
+      String expectedEidr) throws Exception {
+    EddystoneEidrGenerator eidrGenerator =
+        new EddystoneEidrGenerator(toByteArray(serviceEcdhPublicKey));
+    eidrGenerator.setPrivateKeyForTesting(toByteArray(beaconPrivateKey));
+
+    assertArraysEqual(toByteArray(expectedBeaconPublicKey), eidrGenerator.getBeaconPublicKey());
+    assertArraysEqual(toByteArray(expectedSharedKey), eidrGenerator.getSharedSecret());
+    assertArraysEqual(toByteArray(expectedIdentityKey), eidrGenerator.getIdentityKey());
+    assertArraysEqual(toByteArray(expectedTemporaryKeyData),
+        eidrGenerator.generateTkData(TIMESTAMP_SECONDS));
+    assertArraysEqual(toByteArray(expectedTemporaryKey),
+        eidrGenerator.getTemporaryKey(TIMESTAMP_SECONDS));
+    assertArraysEqual(toByteArray(expectedEidrData),
+        eidrGenerator.generateEidrData(ROTATION_PERIOD_EXPONENT, TIMESTAMP_SECONDS));
+    assertArraysEqual(toByteArray(expectedEidr),
+        eidrGenerator.getEidr(ROTATION_PERIOD_EXPONENT, TIMESTAMP_SECONDS));
+  }
+
+
+  /**
+   * Verifies the step-by-step computation of an EIDR identifier by comparing the results
+   * with known-valid test vectors.
+   */
+  public void testVectorsWithKnownIdentityKey() throws Exception {
+    verifyTestVectorsWithKnownIdentityKey(
+            "2fcc73b2346d15adb806ea799431d3c0",
+            "3d9120f528cc1496"
+    );
+
+    verifyTestVectorsWithKnownIdentityKey(
+            "8d6979d8b8f61b96f47660c457e2a492",
+            "bc75d7ffcf53a3ad"
+    );
+
+    verifyTestVectorsWithKnownIdentityKey(
+            "044d6ee9421f36c7c90264fc3230750f",
+            "bb7419847bc27761"
+    );
+
+    verifyTestVectorsWithKnownIdentityKey(
+            "d065f7b189e6a89b5137c8591a5ba938",
+            "818274bfbceb8d3b"
+    );
+  }
+
+  private void verifyTestVectorsWithKnownIdentityKey(String givenIdentityKey, String expectedEidr)
+          throws Exception {
+    EddystoneEidrGenerator eidrGenerator = new EddystoneEidrGenerator();
+    eidrGenerator.setIdentityKey(toByteArray(givenIdentityKey));
+    assertArraysEqual(toByteArray(expectedEidr),
+            eidrGenerator.getEidr(ROTATION_PERIOD_EXPONENT, TIMESTAMP_SECONDS));
+  }
+
+  private void assertArraysEqual(byte[] expected, byte[] actual) throws Exception {
+    if (!Arrays.equals(expected, actual)) {
+      throw new Exception(String.format("Not true that expected %s equals actual %s",
+          toHexString(expected), toHexString(actual)));
+    }
+  }
+
+  private static final char[] HEX = "0123456789ABCDEF".toCharArray();
+
+  private String toHexString(byte[] bytes) {
+    char[] chars = new char[bytes.length * 2];
+    for (int i = 0; i < bytes.length; i++) {
+      int c = bytes[i] & 0xFF;
+      chars[i * 2] = HEX[c >>> 4];
+      chars[i * 2 + 1] = HEX[c & 0x0F];
+    }
+    return new String(chars).toLowerCase();
+  }
+
+  private byte[] toByteArray(String hexString) {
+    int len = hexString.length();
+    byte[] bytes = new byte[len / 2];
+    for (int i = 0; i < len; i += 2) {
+      bytes[i / 2] = (byte) ((Character.digit(hexString.charAt(i), 16) << 4)
+          + Character.digit(hexString.charAt(i + 1), 16));
+    }
+    return bytes;
+  }
+}

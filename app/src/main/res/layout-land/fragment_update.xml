@@ -1,0 +1,607 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2015, Nordic Semiconductor
+  ~ All rights reserved.
+  ~
+  ~ Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+  ~
+  ~ 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+  ~
+  ~ 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the
+  ~ documentation and/or other materials provided with the distribution.
+  ~
+  ~ 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this
+  ~ software without specific prior written permission.
+  ~
+  ~ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+  ~ LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+  ~ HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  ~ LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+  ~ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+  ~ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    xmlns:tools="http://schemas.android.com/tools">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <!-- The size of text below must be fixed, therefore dp are used instead of sp -->
+
+            <no.nordicsemi.android.nrfbeacon.nearby.widget.TrebuchetBoldTextView
+                android:id="@+id/beacn_update_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginLeft="@dimen/update_title_left_margin"
+                android:rotation="270"
+                android:text="@string/beacon_update"
+                android:textColor="@color/darkGray"
+                android:textSize="32dp"
+                android:textStyle="bold"
+                android:visibility="visible"/>
+
+            <TextView
+                android:id="@+id/beacon_update_help"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/activity_vertical_margin"
+                android:layout_marginRight="@dimen/activity_vertical_margin"
+                android:drawableBottom="@drawable/beacon_sample"
+                android:drawablePadding="10dp"
+                android:layout_centerVertical="true"
+                android:layout_centerHorizontal="true"
+                android:gravity="center"
+                android:paddingLeft="20dp"
+                android:paddingRight="20dp"
+                android:text="@string/update_about_message_update"
+                android:visibility="visible"/>
+
+
+            <LinearLayout
+                android:id="@+id/beacon_configuration_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/feature_horizontal_margin"
+                android:layout_marginRight="@dimen/horizontal_margin_right"
+                android:layout_marginTop="10dp"
+                android:layout_below="@+id/beacon_update_help"
+                android:orientation="vertical"
+                android:visibility="gone" >
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_horizontal"
+                    android:orientation="horizontal"
+                    android:baselineAligned="false">
+
+                    <LinearLayout
+                        style="@style/Widget.List"
+                        android:layout_width="0dp"
+                        android:layout_height="205dp"
+                        android:layout_marginLeft="5dp"
+                        android:layout_marginBottom="5dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <no.nordicsemi.android.nrfbeacon.nearby.widget.TrebuchetBoldTextView
+                            android:id="@+id/advanced_title"
+                            style="@style/Widget.ListTitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/configuration_title" />
+
+                        <LinearLayout
+                            android:id="@+id/slot_info_container"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/row_height"
+                            android:background="?android:attr/selectableItemBackground"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingLeft="@dimen/feature_section_padding"
+                            android:paddingRight="@dimen/feature_section_padding"
+                            android:visibility="visible">
+
+                            <TextView
+                                android:id="@+id/all_slot_info"
+                                android:layout_width="0dp"
+                                android:layout_weight="1"
+                                android:layout_height="wrap_content"
+                                android:text="@string/slot_information" />
+
+                            <ImageView
+                                android:id="@+id/show_slot_info"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:src="@drawable/ic_show"/>
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/broadcast_capabilities_container"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/row_height"
+                            android:background="?android:attr/selectableItemBackground"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingLeft="@dimen/feature_section_padding"
+                            android:paddingRight="@dimen/feature_section_padding"
+                            android:visibility="visible">
+
+                            <TextView
+                                android:id="@+id/broadcast_capabilities_title"
+                                android:layout_width="0dp"
+                                android:layout_weight="1"
+                                android:layout_height="wrap_content"
+                                android:text="@string/broadcast_capabilities" />
+
+                            <ImageView
+                                android:id="@+id/show_broadcast_capabilities"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:src="@drawable/ic_show"/>
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/active_slot_container"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/row_height"
+                            android:background="?android:attr/selectableItemBackground"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingLeft="@dimen/feature_section_padding"
+                            android:paddingRight="@dimen/feature_section_padding" >
+
+                            <RelativeLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content">
+                                <Spinner
+                                    android:id="@+id/active_slots"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    tools:listitem="@android:layout/simple_spinner_dropdown_item" />
+
+                                <ImageView
+                                    android:id="@+id/edit_slot"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:src="@drawable/ic_edit"
+                                    android:layout_centerVertical="true"
+                                    android:layout_alignParentRight="true"
+                                    android:background="?attr/selectableItemBackground"/>
+
+                            </RelativeLayout>
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/adv_interval_container"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/row_height"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingLeft="@dimen/feature_section_padding"
+                            android:paddingRight="@dimen/feature_section_padding" >
+
+                            <TextView
+                                android:id="@+id/adv_interval_title"
+                                android:layout_width="0dp"
+                                android:layout_weight="1"
+                                android:layout_height="wrap_content"
+                                android:text="@string/update_adv_interval" />
+
+                            <TextView
+                                android:id="@+id/adv_interval_ms"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textSize="16sp"
+                                android:text="26"/>
+
+                            <ImageView
+                                android:id="@+id/edit_adv_interval"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:src="@drawable/ic_edit"
+                                android:layout_centerVertical="true"
+                                android:layout_alignParentRight="true"
+                                android:layout_marginLeft="5dp"
+                                android:background="?attr/selectableItemBackground"/>
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/radio_tx_power_container"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/row_height"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingLeft="@dimen/feature_section_padding"
+                            android:paddingRight="@dimen/feature_section_padding" >
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_weight="1"
+                                android:layout_height="wrap_content"
+                                android:text="@string/radio_tx_power" />
+
+                            <TextView
+                                android:id="@+id/radio_tx_power"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textSize="16sp"
+                                android:text="26"/>
+
+                            <ImageView
+                                android:id="@+id/edit_radio_tx_power"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:src="@drawable/ic_edit"
+                                android:layout_centerVertical="true"
+                                android:layout_alignParentRight="true"
+                                android:layout_marginLeft="5dp"
+                                android:background="?attr/selectableItemBackground"/>
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        style="@style/Widget.List"
+                        android:layout_width="0dp"
+                        android:layout_height="205dp"
+                        android:layout_marginLeft="@dimen/horizonal_margin_left"
+                        android:layout_marginRight="@dimen/horizontal_margin_right"
+                        android:layout_marginBottom="5dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <no.nordicsemi.android.nrfbeacon.nearby.widget.TrebuchetBoldTextView
+                            style="@style/Widget.ListTitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/frame_info_title"/>
+                        <LinearLayout
+                            android:id="@+id/frame_type_container"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/row_height"
+                            android:background="?android:attr/selectableItemBackground"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingLeft="@dimen/feature_section_padding"
+                            android:paddingRight="@dimen/feature_section_padding"
+                            android:visibility="gone">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_weight="1"
+                                android:layout_height="wrap_content"
+                                android:text="@string/frame_type" />
+
+                            <TextView
+                                android:id="@+id/frame_type"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"/>
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/uid_data_container"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/uid_container_row_height"
+                            android:background="?android:attr/selectableItemBackground"
+                            android:gravity="center_vertical"
+                            android:orientation="vertical"
+                            android:paddingLeft="@dimen/feature_section_padding"
+                            android:paddingRight="@dimen/feature_section_padding"
+                            android:visibility="gone" >
+
+                            <LinearLayout
+                                android:id="@+id/namespace_id_container"
+                                android:layout_width="match_parent"
+                                android:layout_height="@dimen/row_height"
+                                android:background="?android:attr/selectableItemBackground"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal" >
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_weight="1"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/namespace_id" />
+
+                                <TextView
+                                    android:id="@+id/namespace_id"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"/>
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:id="@+id/instance_id_container"
+                                android:layout_width="match_parent"
+                                android:layout_height="@dimen/row_height"
+                                android:background="?android:attr/selectableItemBackground"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal" >
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_weight="1"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/instance_id" />
+
+                                <TextView
+                                    android:id="@+id/instance_id"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"/>
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/url_data_container"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/row_height"
+                            android:background="?android:attr/selectableItemBackground"
+                            android:gravity="center_vertical"
+                            android:orientation="vertical"
+                            android:paddingLeft="@dimen/feature_section_padding"
+                            android:paddingRight="@dimen/feature_section_padding"
+                            android:visibility="gone">
+
+                            <LinearLayout
+                                android:id="@+id/url_container"
+                                android:layout_width="match_parent"
+                                android:layout_height="@dimen/row_height"
+                                android:background="?android:attr/selectableItemBackground"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal" >
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_weight="1"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/url_data" />
+
+                                <TextView
+                                    android:id="@+id/url_data"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"/>
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/tlm_data_container"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="?android:attr/selectableItemBackground"
+                            android:gravity="center_vertical"
+                            android:orientation="vertical"
+                            android:paddingLeft="@dimen/feature_section_padding"
+                            android:paddingRight="@dimen/feature_section_padding"
+                            android:visibility="gone">
+
+                            <LinearLayout
+                                android:id="@+id/voltage_container"
+                                android:layout_width="match_parent"
+                                android:layout_height="@dimen/row_height"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal" >
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_weight="1"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/voltage" />
+
+                                <TextView
+                                    android:id="@+id/voltage"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"/>
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="@dimen/row_height"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal" >
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_weight="1"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/temperature" />
+
+                                <TextView
+                                    android:id="@+id/temperature"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"/>
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="@dimen/row_height"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal" >
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_weight="1"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/advertiser_count" />
+
+                                <TextView
+                                    android:id="@+id/advertiser_count"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"/>
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="@dimen/row_height"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal" >
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_weight="1"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/time_since_reboot" />
+
+                                <TextView
+                                    android:id="@+id/time_since_boot"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"/>
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/etlm_data_container"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="?android:attr/selectableItemBackground"
+                            android:gravity="center_vertical"
+                            android:orientation="vertical"
+                            android:paddingLeft="@dimen/feature_section_padding"
+                            android:paddingRight="@dimen/feature_section_padding"
+                            android:visibility="gone">
+
+                            <LinearLayout
+                                android:id="@+id/etlm_container"
+                                android:layout_width="match_parent"
+                                android:layout_height="@dimen/row_height"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal" >
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/ecrypted_tlm" />
+
+                                <TextView
+                                    android:id="@+id/etlm_data"
+                                    android:layout_width="0dp"
+                                    android:layout_weight="1"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="right"/>
+                            </LinearLayout>
+                            <LinearLayout
+                                android:id="@+id/etlm_salt_container"
+                                android:layout_width="match_parent"
+                                android:layout_height="@dimen/row_height"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal" >
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/salt" />
+
+                                <TextView
+                                    android:id="@+id/etlm_salt"
+                                    android:layout_width="0dp"
+                                    android:layout_weight="1"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="right"/>
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:id="@+id/etlm_msg_int_check_container"
+                                android:layout_width="match_parent"
+                                android:layout_height="@dimen/row_height"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal" >
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/msg_int_check" />
+
+                                <TextView
+                                    android:id="@+id/etlm_message_integrity_check"
+                                    android:layout_width="0dp"
+                                    android:layout_weight="1"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="right"/>
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/eid_data_container"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="?android:attr/selectableItemBackground"
+                            android:gravity="center_vertical"
+                            android:orientation="vertical"
+                            android:paddingLeft="@dimen/feature_section_padding"
+                            android:paddingRight="@dimen/feature_section_padding"
+                            android:visibility="gone">
+
+                            <LinearLayout
+                                android:id="@+id/eid_container"
+                                android:layout_width="match_parent"
+                                android:layout_height="@dimen/row_height"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal" >
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_weight="1"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/eid_data" />
+
+                                <TextView
+                                    android:id="@+id/eid"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"/>
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:id="@+id/exponent_container"
+                                android:layout_width="match_parent"
+                                android:layout_height="@dimen/row_height"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal" >
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_weight="1"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/timer_exponent" />
+
+                                <TextView
+                                    android:id="@+id/timer_exponent"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"/>
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:id="@+id/clock_value_container"
+                                android:layout_width="match_parent"
+                                android:layout_height="@dimen/row_height"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_weight="1"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/clock_value" />
+
+                                <TextView
+                                    android:id="@+id/clock_value"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"/>
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/action_connect"
+                style="@style/Widget.Connect"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="@dimen/activity_vertical_margin_bottom"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
+                android:text="@string/action_connect"/>
+        </RelativeLayout>
+
+</LinearLayout>

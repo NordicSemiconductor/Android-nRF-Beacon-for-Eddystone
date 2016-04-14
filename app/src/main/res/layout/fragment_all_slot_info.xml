@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/all_slot_container"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingLeft="@dimen/alert_dialog_padding_left"
+    android:paddingRight="@dimen/alert_dialog_padding_right"
+    android:paddingTop="10dp"
+    android:paddingBottom="@dimen/alert_dialog_padding_bottom"
+    android:orientation="horizontal"
+    android:focusable="true"
+    android:focusableInTouchMode="true">
+
+    <LinearLayout
+        android:id="@+id/slot_title_container"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_vertical"
+        android:layout_marginTop="10dp">
+    </LinearLayout>
+    <LinearLayout
+        android:id="@+id/slot_info_container"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="right"
+        android:layout_marginTop="10dp">
+    </LinearLayout>
+
+</LinearLayout>
