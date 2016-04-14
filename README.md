@@ -38,7 +38,9 @@ https://play.google.com/store/apps/details?id=no.nordicsemi.android.nrfbeacon.ne
 
 Make sure to enter the API Key in the manifest file
 
-Note:
+Follow the full instructions from the google documentation  https://developers.google.com/beacons/get-started#obtain_and_provision_beacons
+
+### Note:
 
 -Android 4.3 or newer is required.
 
