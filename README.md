@@ -27,6 +27,17 @@ The nRF Beacon for Eddystone application is available on Playstore on the follow
 
 https://play.google.com/store/apps/details?id=no.nordicsemi.android.nrfbeacon.nearby 
 
+## Setting up the project
+-Two important steps would be to enable the Nearby API, the Proximity API and URL Shortener API from the Google developer console's api manager.
+
+-Generate an API Key for android by clicking in credentials 
+
+-Next using the debug keystore retreive the SHA1 Key and enter it with your project package name
+
+-Next Generate an OAuth 2.0 Client for android and follow the same step as above by entering the SHA1 and the package name
+
+Make sure to enter the API Key in the manifest file
+
 Note:
 
 -Android 4.3 or newer is required.
