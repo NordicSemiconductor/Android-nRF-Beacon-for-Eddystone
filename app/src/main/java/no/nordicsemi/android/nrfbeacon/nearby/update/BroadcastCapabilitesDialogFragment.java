@@ -39,7 +39,6 @@ import no.nordicsemi.android.nrfbeacon.nearby.util.ParserUtils;
  */
 public class BroadcastCapabilitesDialogFragment extends DialogFragment {
 
-    private static final String PATTERN_TX_POWER = "[0-9a-fA-F]{32}";
     private static final String BROADCAST_CAPABILITIES = "BROADCAST_CAPABILITIES";
     private static final String TAG = "BEACON";
     private static final int IS_VARIABLE_ADV_SUPPORTED = 0x01;

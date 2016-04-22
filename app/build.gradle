@@ -7,8 +7,8 @@ android {
         applicationId "no.nordicsemi.android.nrfbeacon.nearby"
         minSdkVersion 18
         targetSdkVersion 23
-        versionCode 1
-        versionName '1.0'
+        versionCode 3
+        versionName '1.1'
     }
     buildTypes {
         release {

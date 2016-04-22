@@ -80,7 +80,7 @@ public class AllSlotInfoDialogFragment extends DialogFragment {
         for(int i = 0; i < mAllSlotInfo.size(); i++) {
             TextView slotTitle = new TextView(getActivity());
             slotTitle.setLayoutParams(lParams);
-            slotTitle.setText("Slot " + i);
+            slotTitle.setText("Slot " + i + ":");
             slotTitleContainer.addView(slotTitle);
 
             TextView slotInfo = new TextView(getActivity());

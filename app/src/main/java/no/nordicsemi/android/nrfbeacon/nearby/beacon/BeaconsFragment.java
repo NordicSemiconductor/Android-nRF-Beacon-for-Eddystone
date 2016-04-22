@@ -33,8 +33,6 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
@@ -189,7 +187,7 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
 
     @Override
     public void onCreateOptionsMenu(final Menu menu, final MenuInflater inflater) {
-        inflater.inflate(R.menu.menu_nearby_about, menu);
+        inflater.inflate(R.menu.menu_nearby_settings, menu);
     }
 
     @Override

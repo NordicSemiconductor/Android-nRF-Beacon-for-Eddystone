@@ -29,20 +29,23 @@ public class UnlockBeaconDialogFragment extends DialogFragment {
 
     private static final String PATTERN_TX_POWER = "[0-9a-fA-F]{32}";
     private static final String CHALLENGE = "CHALLENGE";
+    private static final String UNLOCK_MESSAGE = "UNLOCK_MESSAGE";
     private static final String TAG = "BEACON";
     private EditText mUnlockCode;
     private OnBeaconUnlockListener beaconUnlockListener;
     private byte [] mChallenge;
+    private String mUnlockMessage;
 
     public interface OnBeaconUnlockListener {
         void unlockBeacon(byte [] encryptedLockCode, final byte [] beaconLockCode);
         void cancelUnlockBeacon();
     }
 
-    public static UnlockBeaconDialogFragment newInstance(byte [] challenge){
+    public static UnlockBeaconDialogFragment newInstance(byte [] challenge, final String message){
         UnlockBeaconDialogFragment fragment = new UnlockBeaconDialogFragment();
         final Bundle args = new Bundle();
         args.putByteArray(CHALLENGE, challenge);
+        args.putString(UNLOCK_MESSAGE, message);
         fragment.setArguments(args);
         return fragment;
     }
@@ -56,6 +59,7 @@ public class UnlockBeaconDialogFragment extends DialogFragment {
         super.onCreate(savedInstanceState);
         if(getArguments() != null){
             mChallenge = getArguments().getByteArray(CHALLENGE);
+            mUnlockMessage = getArguments().getString(UNLOCK_MESSAGE);
         }
     }
 
@@ -63,7 +67,7 @@ public class UnlockBeaconDialogFragment extends DialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getActivity());
         alertDialogBuilder.setTitle(getString(R.string.unlock_beacon_title));
-        alertDialogBuilder.setMessage(getString(R.string.unlock_beacon_message));
+        alertDialogBuilder.setMessage(mUnlockMessage);
         final View alertDialogView = LayoutInflater.from(getActivity()).inflate(R.layout.fragment_dialog_unlock, null);
         mUnlockCode = (EditText) alertDialogView.findViewById(R.id.lock_code);
         mUnlockCode.setText("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
@@ -80,6 +84,7 @@ public class UnlockBeaconDialogFragment extends DialogFragment {
                     ParserUtils.setByteArrayValue(beaconLockCode, 0, lockCode);
                     final byte [] encryptedLockCode = ParserUtils.aes128Encrypt(mChallenge, new SecretKeySpec(beaconLockCode, "AES"));
                     ((OnBeaconUnlockListener)getParentFragment()).unlockBeacon(encryptedLockCode, beaconLockCode);
+                    dismiss();
                 }
             }
         });

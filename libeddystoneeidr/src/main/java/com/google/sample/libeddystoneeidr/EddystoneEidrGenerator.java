@@ -101,6 +101,7 @@ public class EddystoneEidrGenerator {
       return "";
     return bytesToHex(bytes, 0, bytes.length, add0x);
   }
+
   private static final char[] HEX_ARRAY = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
 
   public static String bytesToHex(final byte[] bytes, final int start, final int length, final boolean add0x) {
@@ -201,15 +202,7 @@ public class EddystoneEidrGenerator {
       return null;
     }
 
-    byte[] sharedSecret =getSharedSecret();
-    if (sharedSecret == null) {
-      Log.e(TAG, "Shared secret is zero. Possibly indicates a weak public key!");
-      return null;
-    }
-
-    Log.v("TAG", "beacon shared secret: " + bytesToHex(sharedSecret, 0, 32, false));
-
-    sharedSecret = hkdfSha256Mac.doFinal(getSharedSecret());
+    byte[] sharedSecret = hkdfSha256Mac.doFinal(getSharedSecret());
     if (sharedSecret == null) {
       Log.e(TAG, "Shared secret is zero. Possibly indicates a weak public key!");
       return null;

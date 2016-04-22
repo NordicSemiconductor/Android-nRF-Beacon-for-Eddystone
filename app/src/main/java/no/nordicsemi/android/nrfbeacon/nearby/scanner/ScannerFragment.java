@@ -58,6 +58,7 @@ public class ScannerFragment extends DialogFragment {
 	private final static String TAG = "ScannerFragment";
 
 	private final static String PARAM_UUID = "param_uuid";
+	private final static String PARAM_UUID1 = "param_uuid1";
 	private final static long SCAN_DURATION = 8000;
 	/* package */static final int NO_RSSI = -1000;
 
@@ -88,7 +89,6 @@ public class ScannerFragment extends DialogFragment {
 	@Override
 	public void onCreate(final Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-
 		final Bundle args = getArguments();
 		mUuid = args.getParcelable(PARAM_UUID);
 	}

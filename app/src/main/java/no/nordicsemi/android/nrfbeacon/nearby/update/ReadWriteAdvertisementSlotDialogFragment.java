@@ -369,7 +369,7 @@ public class ReadWriteAdvertisementSlotDialogFragment extends DialogFragment {
         if(!name.isEmpty()) {
             final Account[] accounts = AccountManager.get(getActivity()).getAccounts();
             for (Account account : accounts) {
-                if (account.name.equals(name)) {
+                if (account.name.equals(name) && account.type.equals("com.google"))  {
                     return account;
                 }
             }
@@ -417,7 +417,13 @@ public class ReadWriteAdvertisementSlotDialogFragment extends DialogFragment {
                 return true;
             }
 
-            final String url = mUrlTypes.getSelectedItem().toString().trim() + mUrl.getText().toString().trim();
+            final String urlText = mUrl.getText().toString().trim();
+            if(urlText.isEmpty()){
+                mUrl.setError("Please enter a value for URL");
+                return false;
+            }
+
+            final String url = mUrlTypes.getSelectedItem().toString().trim() + urlText;
             if (url.isEmpty()) {
                 mUrl.setError("Please enter a value for URL");
                 return false;

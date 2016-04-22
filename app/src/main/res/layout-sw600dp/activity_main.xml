@@ -22,6 +22,7 @@
   -->
 <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/beacon_view"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -38,16 +39,17 @@
             app:popupTheme="@style/ActionBarPopupThemeOverlay"
             app:titleTextAppearance="@style/ActionBar.TitleText">
 
-            <android.support.design.widget.TabLayout
-                android:id="@+id/sliding_tabs"
-                android:layout_width="360dp"
-                android:layout_height="match_parent"
-                app:tabSelectedTextColor="@color/tabSelectedTextColor"
-                app:tabTextColor="@color/tabTextColor"
-                app:tabIndicatorColor="@color/tabIndicatorColor"
-                app:tabGravity="fill"
-                app:tabIndicatorHeight="3dp"
-                app:tabMode="fixed" />
+
+        <android.support.design.widget.TabLayout
+            android:id="@+id/sliding_tabs"
+            android:layout_width="360dp"
+            android:layout_height="match_parent"
+            app:tabSelectedTextColor="@color/tabSelectedTextColor"
+            app:tabTextColor="@color/tabTextColor"
+            app:tabIndicatorColor="@color/tabIndicatorColor"
+            app:tabIndicatorHeight="3dp"
+            app:tabGravity="fill"
+            app:tabMode="fixed"/>
         </android.support.v7.widget.Toolbar>
 
     </android.support.design.widget.AppBarLayout>

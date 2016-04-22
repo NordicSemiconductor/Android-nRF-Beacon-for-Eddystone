@@ -177,7 +177,7 @@ public class MainActivity extends AppCompatActivity {
         this.mBeaconsFragment = beaconsFragment;
     }
 
-    public void setUPdateFragment(UpdateFragment updateFragment) {
+    public void setUpdateFragment(UpdateFragment updateFragment) {
         this.mUpdateFragment = updateFragment;
     }
 

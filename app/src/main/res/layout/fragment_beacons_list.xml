@@ -49,6 +49,6 @@
         android:drawablePadding="30dp"
         android:drawableTop="@drawable/ic_nearby_grey"
         android:gravity="center"
-        android:text="@string/no_sensors_stored" />
+        android:text="@string/grant_nearby_permission" />
 
 </RelativeLayout>

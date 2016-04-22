@@ -22,16 +22,23 @@
 package no.nordicsemi.android.nrfbeacon.nearby.update;
 
 import android.app.Dialog;
+import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+
 import no.nordicsemi.android.nrfbeacon.nearby.R;
+import no.nordicsemi.android.nrfbeacon.nearby.util.ParserUtils;
 
 /**
  * Created by rora on 06.04.2016.
@@ -39,22 +46,31 @@ import no.nordicsemi.android.nrfbeacon.nearby.R;
 public class RadioTxPowerDialogFragment extends DialogFragment {
 
     private static final String PATTERN_TX_POWER = "(-?\\d{1,3}(|$))+";
+    private static final int IS_VARIABLE_TX_POWER_SUPPORTED = 0x02;
     private static final String RADIO_TX_POWER = "RADIO_TX_POWER";
     private static final String ADVANCED_ADV_TX_POWER = "ADVANCED_ADV_TX_POWER";
+    private static final String BROADCAST_CAPABILITIES = "BROADCAST_CAPABILITIES";
     private static final String TAG = "BEACON";
 
     private String mRadioTxPower;
     private boolean mAdvancedAdvTxPower;
+    private byte [] mBroadcastCapabilities;
     private EditText radioTxPower;
+    private LinearLayout mVariableRadioTxPowerContainer;
+    private LinearLayout mRadioTxPowerContainer;
+    private Spinner mVariableTxPowerTypes;
+    private ArrayList<String> mVariableTxPowerList;
+    private ArrayAdapter mVariableTxPowerAdapter;
 
     public interface OnRadioTxPowerListener {
         void configureRadioTxPower(final byte [] radioTxPower, final boolean advanceTxPowerSupported);
     }
 
-    public static RadioTxPowerDialogFragment newInstance(final String radioTxPower, final boolean advancedAdvTxPower){
+    public static RadioTxPowerDialogFragment newInstance(final String radioTxPower, final byte []  broadcastCapabilities, final boolean advancedAdvTxPower){
         RadioTxPowerDialogFragment fragment = new RadioTxPowerDialogFragment();
         final Bundle args = new Bundle();
         args.putString(RADIO_TX_POWER, radioTxPower);
+        args.putByteArray(BROADCAST_CAPABILITIES, broadcastCapabilities);
         args.putBoolean(ADVANCED_ADV_TX_POWER, advancedAdvTxPower);
         fragment.setArguments(args);
         return fragment;
@@ -70,6 +86,7 @@ public class RadioTxPowerDialogFragment extends DialogFragment {
         if(getArguments() != null){
             mRadioTxPower = getArguments().getString(RADIO_TX_POWER);
             mAdvancedAdvTxPower = getArguments().getBoolean(ADVANCED_ADV_TX_POWER);
+            mBroadcastCapabilities = getArguments().getByteArray(BROADCAST_CAPABILITIES);
         }
     }
 
@@ -81,7 +98,12 @@ public class RadioTxPowerDialogFragment extends DialogFragment {
         } else {
             alertDialogBuilder.setTitle(getString(R.string.title_config_adv_radio_tx_power));
         }
+
+
         final View view = LayoutInflater.from(getActivity()).inflate(R.layout.fragment_dialog_radio_tx_power, null);
+        mRadioTxPowerContainer = (LinearLayout) view.findViewById(R.id.radio_tx_power_container);
+        mVariableRadioTxPowerContainer = (LinearLayout) view.findViewById(R.id.var_radio_tx_power_container);
+        mVariableTxPowerTypes = (Spinner) view.findViewById(R.id.var_radio_tx_power_types);
         final TextView currentTxPower = (TextView) view.findViewById(R.id.current_radio_tx_power);
         currentTxPower.setText(mRadioTxPower);
         final TextView currentTxPowerTitle = (TextView) view.findViewById(R.id.radio_tx_power_title);
@@ -93,7 +115,21 @@ public class RadioTxPowerDialogFragment extends DialogFragment {
         if(mAdvancedAdvTxPower) {
             radioTxPower.setHint(getString(R.string.advanced_adv_tx_power));
             currentTxPowerTitle.setText(getString(R.string.current_advanced_adv_tx_power));
+            mVariableRadioTxPowerContainer.setVisibility(View.GONE);
+        } else {
+            if (mBroadcastCapabilities != null) {
+                final int capabilities = ParserUtils.getIntValue(mBroadcastCapabilities, 3, BluetoothGattCharacteristic.FORMAT_UINT8);
+                final boolean variableTxPower = (capabilities & IS_VARIABLE_TX_POWER_SUPPORTED) > 0;
+                if(!variableTxPower) {
+                    mVariableRadioTxPowerContainer.setVisibility(View.GONE);
+                } else {
+                    mRadioTxPowerContainer.setVisibility(View.GONE);
+                    updateUi();
+                }
+            }
         }
+
+
 
         alertDialog.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -115,11 +151,29 @@ public class RadioTxPowerDialogFragment extends DialogFragment {
         return alertDialog;
     }
 
+    private void updateUi() {
+        mVariableTxPowerList = new ArrayList<>();
+        for(int i = 6; i < mBroadcastCapabilities.length; i++){
+           mVariableTxPowerList.add(String.valueOf(ParserUtils.getIntValue(mBroadcastCapabilities, i , BluetoothGattCharacteristic.FORMAT_SINT8)));
+        }
+        mVariableTxPowerAdapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_spinner_item, mVariableTxPowerList);
+        mVariableTxPowerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        mVariableTxPowerTypes.setAdapter(mVariableTxPowerAdapter);
+
+        if(mVariableTxPowerList.contains(mRadioTxPower)){
+            final int index = mVariableTxPowerList.indexOf(mRadioTxPower);
+            mVariableTxPowerTypes.setSelection(index);
+        }
+    }
+
     private boolean validateInput() {
-        final String advertisingInterval = radioTxPower.getText().toString().trim();
+
+        if(mVariableRadioTxPowerContainer.getVisibility() == View.VISIBLE){
+            return true;
+        }
 
         final String txPower = radioTxPower.getText().toString().trim();
-        if(advertisingInterval.isEmpty()){
+        if(txPower.isEmpty()){
             radioTxPower.setError("Enter supported Radio Tx power value");
             return false;
         } else {
@@ -132,9 +186,15 @@ public class RadioTxPowerDialogFragment extends DialogFragment {
     }
 
     private byte[] getValueFromView() {
-        final byte [] data = new byte[1];
-        data[0] = (byte) Integer.parseInt(radioTxPower.getText().toString().trim());
-        return data;
+        if(mVariableRadioTxPowerContainer.getVisibility() == View.VISIBLE) {
+            final byte[] data = new byte[1];
+            data[0] = (byte) Integer.parseInt(mVariableTxPowerTypes.getSelectedItem().toString().trim());
+            return data;
+        } else {
+            final byte[] data = new byte[1];
+            data[0] = (byte) Integer.parseInt(radioTxPower.getText().toString().trim());
+            return data;
+        }
     }
 
     @Override

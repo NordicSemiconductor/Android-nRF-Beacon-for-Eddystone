@@ -117,10 +117,16 @@ public class EcdhKeyInfoDialogFragment extends DialogFragment {
                 decryptedIdentityKey.setText(getString(R.string.no_identity_key));
                 break;
             case TYPE_EID:
-                frameType.setText(getString(R.string.type_tlm));
+                frameType.setText(getString(R.string.type_eid));
                 encryptedIdentityKey.setText(mEncryptedIdentityKey);
                 decryptedIdentityKey.setText(mDecryptedIdentityKey);
                 break;
+            default:
+                frameType.setText(getString(R.string.type_empty));
+                encryptedIdentityKey.setText(mEncryptedIdentityKey);
+                decryptedIdentityKey.setText(mDecryptedIdentityKey);
+                break;
+
         }
 
 

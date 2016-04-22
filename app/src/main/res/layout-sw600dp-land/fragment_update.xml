@@ -609,7 +609,7 @@
             </LinearLayout>
 
             <Button
-                android:id="@+id/action_connect"
+                android:id="@+id/btn_connect"
                 style="@style/Widget.Connect"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
