@@ -23,6 +23,7 @@ package no.nordicsemi.android.nrfbeacon.nearby.update;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.app.Activity;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -62,6 +63,10 @@ import no.nordicsemi.android.nrfbeacon.nearby.AuthorizedServiceTask;
 import no.nordicsemi.android.nrfbeacon.nearby.R;
 import no.nordicsemi.android.nrfbeacon.nearby.util.AuthTaskUrlShortener;
 import no.nordicsemi.android.nrfbeacon.nearby.util.ParserUtils;
+import uk.co.deanwild.materialshowcaseview.IShowcaseListener;
+import uk.co.deanwild.materialshowcaseview.MaterialShowcaseSequence;
+import uk.co.deanwild.materialshowcaseview.MaterialShowcaseView;
+import uk.co.deanwild.materialshowcaseview.ShowcaseConfig;
 
 /**
  * Created by rora on 07.03.2016.
@@ -110,8 +115,6 @@ public class ReadWriteAdvertisementSlotDialogFragment extends DialogFragment {
     private int mNewFrameType;
     private Button mButtonNeutral;
     private ProgressDialog mProgressDialog;
-    private Handler mProgressDialogHandler;
-    private boolean mUrlShortenerClicked = false;
 
     public interface OnReadWriteAdvertisementSlotListener {
         void configureEidSlot(byte[] eidSlotData);
@@ -258,7 +261,7 @@ public class ReadWriteAdvertisementSlotDialogFragment extends DialogFragment {
             }
         });
 
-        if(mReadWriteAdvSlotData.length > 0)
+        if(mReadWriteAdvSlotData.length == 0)
             mSecurityTypes.setSelection(0);
 
         alertDialog.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
@@ -308,10 +311,6 @@ public class ReadWriteAdvertisementSlotDialogFragment extends DialogFragment {
                         final String url = mUrl.getText().toString().trim();
 
                         if (!url.isEmpty()) {
-                            mUrlShortenerClicked = true;
-                            /*mProgressDialog.show();
-                            mProgressDialogHandler = new Handler();
-                            mProgressDialogHandler.postDelayed(mRunnableHandler, 15000);*/
                             if(getUserAccount() != null)
                                 new AuthTaskUrlShortener(mUrlShortenerCallback, url, getActivity(), getUserAccount()).execute();
                             else
@@ -342,8 +341,6 @@ public class ReadWriteAdvertisementSlotDialogFragment extends DialogFragment {
             }
         });
 
-        updateUi();
-
         final String name = getUserAccountName();
         if(!name.isEmpty()) {
             Account userAccount = null;
@@ -356,12 +353,16 @@ public class ReadWriteAdvertisementSlotDialogFragment extends DialogFragment {
             }
             new AuthorizedServiceTask(getActivity(), userAccount, AUTH_SCOPE_URL_SHORTENER).execute();
         }
+
+        updateUi();
         return alertDialog;
     }
 
     private String getUserAccountName(){
         SharedPreferences mSharedPreferences = getContext().getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
         return mSharedPreferences.getString(ACCOUNT_NAME_PREF, null);
+
+
     }
 
     private Account getUserAccount(){
@@ -376,15 +377,6 @@ public class ReadWriteAdvertisementSlotDialogFragment extends DialogFragment {
         }
         return null;
     }
-
-    private final Runnable mRunnableHandler = new Runnable() {
-        @Override
-        public void run() {
-            if(mProgressDialog != null && mProgressDialog.isShowing()){
-                mProgressDialog.dismiss();
-            }
-        }
-    };
 
     private boolean validateInput() {
 

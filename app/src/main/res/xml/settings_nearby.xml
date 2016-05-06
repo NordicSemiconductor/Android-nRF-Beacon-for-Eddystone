@@ -27,7 +27,34 @@
             android:defaultValue="false"
             android:key="@string/nearby_settings_key"
             android:title="@string/background_scanning"
+            android:icon="@drawable/ic_nearby_blue"
             android:summary="@string/background_scanning_warning"/>
     </PreferenceCategory>
 
+    <PreferenceCategory android:title="@string/nrf_for_eddystone" >
+        <Preference
+            android:key="@string/nrf_beacon_for_eddystone_key"
+            android:title="@string/nrf_beacon_for_eddystone"
+            android:icon="@drawable/ic_nav_github"
+            android:selectable="true"/>
+
+        <Preference
+            android:key="@string/nrf5_sdk_for_eddystone_key"
+            android:title="@string/nrf5_sdk_for_eddystone"
+            android:icon="@drawable/ic_nav_github"
+            android:selectable="true"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/about_app" >
+        <Preference
+            android:key="@string/tutorial_settings_key"
+            android:title="@string/enable_tutorials"
+            android:icon="@drawable/ic_nav_tutorial_selected"
+            android:summary="@string/tutorial_settings_summary"/>
+        <no.nordicsemi.android.nrfbeacon.nearby.settings.AboutPreference
+            android:key="@string/about_app_key"
+            android:title="@string/about_app"
+            android:icon="@drawable/ic_nav_info_selected"
+            android:selectable="true"/>
+    </PreferenceCategory>
 </PreferenceScreen>

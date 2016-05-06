@@ -1,12 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <!--<item
-        android:id="@+id/action_about"
-        android:orderInCategory="100"
-        app:showAsAction="always"
-        android:icon="@drawable/ic_menu_about"
-        android:title="@string/action_about"/>-->
     <item
         android:id="@+id/action_clear_slot"
         android:icon="@drawable/ic_delete"
@@ -45,4 +39,9 @@
         android:orderInCategory="100"
         app:showAsAction="never"
         android:title="@string/action_register_beacon"/>
+    <item
+        android:id="@+id/action_update_settings"
+        android:orderInCategory="100"
+        app:showAsAction="never"
+        android:title="@string/action_update_settings"/>
 </menu>

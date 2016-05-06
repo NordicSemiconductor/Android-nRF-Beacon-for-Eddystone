@@ -22,26 +22,26 @@
 package no.nordicsemi.android.nrfbeacon.nearby.settings;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.MenuItem;
 
-import no.nordicsemi.android.nrfbeacon.nearby.MainActivity;
 import no.nordicsemi.android.nrfbeacon.nearby.R;
-import no.nordicsemi.android.nrfbeacon.nearby.beacon.BeaconsFragment;
+import no.nordicsemi.android.nrfbeacon.nearby.common.OnTutorialsEnabledListener;
+import uk.co.deanwild.materialshowcaseview.PrefsManager;
 
-public class NearbySettingsActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener{
+public class NearbySettingsActivity extends AppCompatActivity implements OnTutorialsEnabledListener{
 
     private boolean mBackgroundScanningEnabled;
+    private boolean mTutorialsEnabled = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_nearby_settings);
+        setContentView(R.layout.activity_settings);
         final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle(getString(R.string.settings_title));
@@ -49,7 +49,6 @@ public class NearbySettingsActivity extends AppCompatActivity implements SharedP
         mBackgroundScanningEnabled = PreferenceManager.getDefaultSharedPreferences(NearbySettingsActivity.this).getBoolean(getString(R.string.nearby_settings_key), false);
         if(savedInstanceState == null)
             getFragmentManager().beginTransaction().replace(R.id.content, new NearbySettingsFragment()).commit();
-
     }
 
     @Override
@@ -64,18 +63,14 @@ public class NearbySettingsActivity extends AppCompatActivity implements SharedP
 
     @Override
     public void onBackPressed() {
-        boolean flag = PreferenceManager.getDefaultSharedPreferences(NearbySettingsActivity.this).getBoolean(getString(R.string.nearby_settings_key), false);
-        if(mBackgroundScanningEnabled != flag) {
-            mBackgroundScanningEnabled = flag;
-            Intent result = new Intent();
-            result.setData(Uri.parse(String.valueOf(mBackgroundScanningEnabled)));
-            setResult(RESULT_OK, result);
-        }
+        Intent result = new Intent();
+        result.putExtra("TUTORIALS_ENABLED", mTutorialsEnabled);
+        setResult(RESULT_OK, result);
         super.onBackPressed();
-
     }
 
     @Override
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+    public void onTutorialsEnabled(boolean flag) {
+        mTutorialsEnabled = flag;
     }
 }

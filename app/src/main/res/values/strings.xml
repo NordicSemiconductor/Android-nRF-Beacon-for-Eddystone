@@ -267,5 +267,39 @@
     <string name="unknown_error">Unknown error</string>
     <string name="fail_eid_configuration">Eid configuration failed!</string>
     <string name="enable_location_services">Please enable location services to scan for devices</string>
+    <string name="tutorial_settings">Tutorial</string>
+    <string name="tutorial_settings_summary">The quick how to guide is only displayed at the first launch of the app, but you can enable it here again</string>
+    <string name="tutorial_settings_key">tutorial_settings</string>
+    <string name="nrf_for_eddystone">Github</string>
+    <string name="enable_tutorials">Enable tutorial</string>
+    <string name="nrf_beacon_for_eddystone_key">nrf_beacon_for_eddystone</string>
+    <string name="nrf5_sdk_for_eddystone_key">nrf5_sdk_for_eddystone</string>
+    <string name="nrf5_sdk_for_eddystone">nRF5 SDK for Eddystone</string>
+    <string name="action_update_settings">Setttings</string>
+    <string name="nrf_beacon_for_eddystone">nRF Beacon for Eddystone</string>
+    <string name="tutorial_enabled">Tutorials have been enabled</string>
+    <string name="got_it">GOT IT!</string>
+    <string name="all_slot_showcase">Click to get an overview of slots created in the beacon</string>
+    <string name="capabilities_showcase">Click to view the broadcast capabilities of the beacon</string>
+    <string name="active_slots_showcase">Use the dropdown to switch between slots</string>
+    <string name="edit_slot_showcase">Click here to create/edit new/active slots</string>
+    <string name="clear_slot_showcase">Use the trash bin to clear an active slot</string>
+    <string name="refresh_slot_showcase">Use the refresh to update the slot data, helpful with EID and TLM slots</string>
+    <string name="nearby_Settings_showcase">Nearby scanning settings are here</string>
+    <string name="switching_slots">Switching slots</string>
+    <string name="please_wait_switching_slots">Please wait, switching to the requested slot</string>
+    <string name="unlocking_beacon">Unlocking Beacon</string>
 
+    <string name="about_text"><b>nRF Beacon for Eddystone</b> is an application that lets you search for Eddystone beacons in range using the Nearby API.
+        This app also supports the Eddystone GATT Configuration Service allowing you to configure beacons with any Eddystone Frame Type and other beacon configurable properties.
+        Proximity API support has also been added in this app to configure EID beacons as well as to register beacons and their attachments on the Proximity API Cloud.</string>
+    <string name="about_link"><a href="http://www.nordicsemi.com">www.nordicsemi.com</a></string>
+    <string name="action_facebook">Facebook</string>
+    <string name="action_twitter">Twitter</string>
+    <string name="action_linkedin">LinkedIn</string>
+    <string name="action_youtube">YouTube</string>
+    <string name="version">Version %s</string>
+    <string name="about_app">About</string>
+    <string name="about_app_key">about_app</string>
+    <string name="action_devzone">Developer Zone</string>
 </resources>

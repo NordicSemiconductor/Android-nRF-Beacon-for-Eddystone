@@ -50,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
 
     private BeaconsFragment mBeaconsFragment;
     private UpdateFragment mUpdateFragment;
+    private int mTabPosition = 0;
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -101,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onPageSelected(final int position) {
-                Log.v(TAG, "position: " + position);
+                mTabPosition = position;
                 switch (position){
                     case 1:
                         mUpdateFragment.ensurePermissionGranted(new String[]{Manifest.permission.GET_ACCOUNTS});
@@ -111,7 +112,6 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onPageScrolled(final int position, final float positionOffset, final int positionOffsetPixels) {
-                // empty
             }
 
             @Override
@@ -179,6 +179,14 @@ public class MainActivity extends AppCompatActivity {
 
     public void setUpdateFragment(UpdateFragment updateFragment) {
         this.mUpdateFragment = updateFragment;
+    }
+
+    /**
+     * Return a tab position
+     * @return
+     */
+    public int getTabPosition() {
+        return mTabPosition;
     }
 
     private class FragmentAdapter extends FragmentPagerAdapter {

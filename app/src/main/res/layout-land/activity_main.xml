@@ -40,7 +40,7 @@
 
             <android.support.design.widget.TabLayout
                 android:id="@+id/sliding_tabs"
-                android:layout_width="360dp"
+                android:layout_width="250dp"
                 android:layout_height="match_parent"
                 app:tabSelectedTextColor="@color/tabSelectedTextColor"
                 app:tabTextColor="@color/tabTextColor"

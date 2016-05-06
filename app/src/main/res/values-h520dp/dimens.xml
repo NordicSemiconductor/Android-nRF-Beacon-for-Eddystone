@@ -21,6 +21,5 @@
   ~ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   -->
 <resources>
-    <string name="beacon_update">UPDATE BEACON</string>
-    <string name="namespace_id">N.space ID</string>
+    <dimen name="row_height">35dp</dimen>
 </resources>

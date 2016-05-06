@@ -80,6 +80,7 @@
             android:label="@string/service_name" />
 
         <activity android:name=".settings.NearbySettingsActivity"></activity>
+        <activity android:name=".settings.UpdateSettingsActivity"></activity>
 
         <service android:name=".NearbyBackgroundService"/>
     </application>

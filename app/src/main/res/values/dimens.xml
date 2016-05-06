@@ -32,7 +32,7 @@
     <dimen name="dfu_title_left_margin">-186dp</dimen>
     <dimen name="uuid_textSize">11sp</dimen>
     
-    <dimen name="feature_horizontal_margin">44dp</dimen>
+    <dimen name="feature_horizontal_margin">30dp</dimen>
     <dimen name="feature_vertical_margin_top">15dp</dimen>
     <dimen name="feature_section_padding">8dp</dimen>
     

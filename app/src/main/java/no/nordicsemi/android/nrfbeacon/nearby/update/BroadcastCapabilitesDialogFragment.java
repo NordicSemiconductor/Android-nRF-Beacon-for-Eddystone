@@ -60,7 +60,6 @@ public class BroadcastCapabilitesDialogFragment extends DialogFragment {
     }
 
     public BroadcastCapabilitesDialogFragment(){
-
     }
 
     @Override

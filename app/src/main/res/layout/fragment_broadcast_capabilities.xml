@@ -162,9 +162,9 @@
                         android:id="@+id/supported_tx_power"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
+                        android:gravity="right"
                         android:layout_weight="1"
-                        android:singleLine="false"
-                        android:text="kbnadlsjkbhsaludlasdgalsdhbsahdblsagbdlsadlasbdjhbasdj,bsa"/>
+                        android:singleLine="false"/>
             </LinearLayout>
         </LinearLayout>
     </ScrollView>

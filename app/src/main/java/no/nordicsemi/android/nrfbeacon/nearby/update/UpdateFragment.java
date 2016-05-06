@@ -79,8 +79,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Locale;
 import java.util.Random;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import javax.crypto.spec.SecretKeySpec;
@@ -92,8 +96,11 @@ import no.nordicsemi.android.nrfbeacon.nearby.UpdateService;
 import no.nordicsemi.android.nrfbeacon.nearby.common.BaseFragment;
 import no.nordicsemi.android.nrfbeacon.nearby.scanner.ScannerFragment;
 import no.nordicsemi.android.nrfbeacon.nearby.scanner.ScannerFragmentListener;
+import no.nordicsemi.android.nrfbeacon.nearby.settings.UpdateSettingsActivity;
 import no.nordicsemi.android.nrfbeacon.nearby.util.NetworkUtils;
 import no.nordicsemi.android.nrfbeacon.nearby.util.ParserUtils;
+import uk.co.deanwild.materialshowcaseview.MaterialShowcaseSequence;
+import uk.co.deanwild.materialshowcaseview.ShowcaseConfig;
 
 public class UpdateFragment extends BaseFragment implements ScannerFragmentListener,
         UnlockBeaconDialogFragment.OnBeaconUnlockListener,
@@ -107,17 +114,17 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
     /**
      * The UUID of a service in the beacon advertising packet when in Config mode. This may be <code>null</code> if no filter required.
      */
-    private static final UUID EDDYSTONE_GATT_CONFIG_SERVICE_UUID = UUID.fromString("A3C87500-8ED3-4BDF-8A39-A01BEBEDE295");//UUID.fromString("0000FEAA-0000-1000-8000-00805F9B34FB");
+    private static final UUID EDDYSTONE_GATT_CONFIG_SERVICE_UUID = UUID.fromString("A3C87500-8ED3-4BDF-8A39-A01BEBEDE295");
     private static final String AUTH_SCOPE_PROXIMITY_API = "oauth2:https://www.googleapis.com/auth/userlocation.beacon.registry";
     private static final String APP_NAMESPACE_TYPE = "nrf-nearby-1100/string";
     private static final String ACCOUNT_NAME_PREF = "userAccount";
     private static final String SHARED_PREFS_NAME = "nrfNearbyInfo";
-    /*private static final String SERVICE_ECDH_KEY = "SERVICE_ECDH_KEY";*/
     private static final String TAG = "BEACON";
 
     static final int REQUEST_CODE_USER_ACCOUNT = 1002;
     private static final int REQUEST_PERMISSION_REQ_CODE = 76; // any 8-bit number
     private static final int REQUEST_ENABLE_BT = 1;
+    private static final int REQUEST_UPDATE_SETTINGS = 252;
 
     private static final int LOCKED = 0x00;
     private static final int UNLOCKED = 0x01;
@@ -131,6 +138,7 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
 
     private static final int ERROR_ALREADY_EXISTS = 409;
     private static final int ERROR_UNAUTHORIZED = 401;
+    public static final String TOOLBAR_BUTTON_HELP = "TOOLBAR_BUTTON_HELP";
 
     private TextView mBeaconHelp;
 
@@ -147,6 +155,8 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
     private ImageView mEditAdvInterval;
     private ImageView mEditRadioTxPower;
     private ImageView mShowSlotInfo;
+    private ImageView mClearActiveSlot;
+    private ImageView mRefreshActiveSlot;
     private TextView mFrameTypeView;
     private Spinner mActiveSlots;
     private TextView mNamespaceId;
@@ -187,7 +197,6 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
     private byte[] mServiceEcdhKey;
     private byte[] mBeaconPublicEcdhKey = null;
     private Handler mProgressDialogHandler;
-    private String mBeaconEcdhPrivateKey;
     private boolean mEikGenerated = false;
     private int mAdvancedAdvTxPower;
     private String mAccountName;
@@ -279,6 +288,7 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
                         mEikGenerated = false;
                         mIsBeaconLocked = true;
                         updateUiForBeacons(UpdateService.STATE_DISCONNECTED, UpdateService.LOCKED);
+                        updateUiOnDisconnection();
                         break;
                     case UpdateService.STATE_CONNECTED:
                         mConnectButton.setText(R.string.action_disconnect);
@@ -309,9 +319,6 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
                 }
 
             } else if (UpdateService.ACTION_BROADCAST_CAPABILITIES.equals(action)) {
-				/*final UUID uuid = ((ParcelUuid) intent.getParcelableExtra(UpdateService.EXTRA_DATA)).getUuid();
-				mUuidView.setText(uuid.toString());
-				setUuidControlsEnabled(true);*/
                 mBroadcastCapabilities = intent.getByteArrayExtra(UpdateService.EXTRA_DATA);
                 if (mBroadcastCapabilities != null) {
                     Log.v("BEACON", "Broadcast capabilities");
@@ -364,6 +371,7 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
             } else if (UpdateService.ACTION_ADVANCED_REMAIN_CONNECTABLE.equals(action)) {
                 mRemainConnectable = intent.getExtras().getBoolean(UpdateService.EXTRA_DATA);
                 Log.v(TAG, "Remain connectable: " + mRemainConnectable);
+                createShowcaseSequence();
             } else if (UpdateService.ACTION_BROADCAST_ALL_SLOT_INFO.equals(action)) {
                 mActiveSlotsTypes = intent.getStringArrayListExtra(UpdateService.EXTRA_DATA);
                 Log.v(TAG, "SLot info list size: " + mActiveSlotsTypes.size());
@@ -396,6 +404,7 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
 
         mActiveSlot = binder.getActiveSlot();
         if (mActiveSlot > -1) {
+            mIsActiveSlotAdapterUpdated = true;
             mActiveSlots.setSelection(mActiveSlot);
         }
 
@@ -476,6 +485,7 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
                 mRwAdvertisingSlot = intent.getByteArrayExtra(UpdateService.EXTRA_DATA);
                 final boolean containsEid = mActiveSlotsTypes.contains(getString(R.string.type_eid));
                 if (containsEid) {
+                    mTlmDataContainer.setVisibility(View.GONE);
                     mEtlmDataContainer.setVisibility(View.VISIBLE);
                     mFrameTypeView.setText(getString(R.string.type_etlm));
                     final String etlm = ParserUtils.bytesToHex(mRwAdvertisingSlot, 2, 12, true);
@@ -491,12 +501,26 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
                     final String beaconTemperature = intent.getExtras().getString(UpdateService.EXTRA_BEACON_TEMPERATURE, "");
                     final String pduCount = intent.getExtras().getString(UpdateService.EXTRA_PDU_COUNT, "");
                     final String timeSinceBoot = intent.getExtras().getString(UpdateService.EXTRA_TIME_SINCE_BOOT, "");
+                    final long timeSinceBootInMs = Long.valueOf(timeSinceBoot);
+                    final Calendar calendar = Calendar.getInstance();
+                    calendar.setTimeInMillis(timeSinceBootInMs);
+                    calendar.setTimeZone(TimeZone.getTimeZone("UTC"));
+                    StringBuilder builder = new StringBuilder();
+                    if (timeSinceBootInMs < 86400000L)
+                        builder.append(String.format(Locale.US, "%1$tR:%1$tS.%1$tL", calendar));
+                    else if (timeSinceBootInMs < 86400000L * 2){
+                        builder.append(String.format(Locale.US, "1 day + %1$tR:%1$tS.%1$tL", calendar));
+                    } else {
+                        final int days = (int) (timeSinceBootInMs / 86400000L);
+                        builder.append(String.format(Locale.US, "%1$d days + %2$tR:%2$tS.%2$tL", days, calendar));
+                    }
 
+                    mEtlmDataContainer.setVisibility(View.GONE);
                     mTlmDataContainer.setVisibility(View.VISIBLE);
                     mVoltage.setText(batteryVoltage);
                     mTemperature.setText(beaconTemperature);
                     mPduCount.setText(pduCount);
-                    mTimeSinceReboot.setText(timeSinceBoot);
+                    mTimeSinceReboot.setText(builder.toString());
                 }
                 break;
 
@@ -526,6 +550,7 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
                 mUrlDataContainer.setVisibility(View.GONE);
                 mUidDataContainer.setVisibility(View.GONE);
                 mTlmDataContainer.setVisibility(View.GONE);
+                mEtlmDataContainer.setVisibility(View.GONE);
                 mEidDataContainer.setVisibility(View.GONE);
                 break;
         }
@@ -597,8 +622,22 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
                     final String pduCount = String.valueOf(ParserUtils.decodeUint32BigEndian(readWriteAdvSlot, 6));
                     final String timeSinceBoot = String.valueOf(ParserUtils.decodeUint32BigEndian(readWriteAdvSlot, 10) * 100);
 
+                    final long timeSinceBootInMs = Long.valueOf(timeSinceBoot);
+                    final Calendar calendar = Calendar.getInstance();
+                    calendar.setTimeInMillis(timeSinceBootInMs);
+                    calendar.setTimeZone(TimeZone.getTimeZone("UTC"));
+                    StringBuilder builder = new StringBuilder();
+                    if (timeSinceBootInMs < 86400000L)
+                        builder.append(String.format(Locale.US, "%1$tR:%1$tS.%1$tL", calendar));
+                    else if (timeSinceBootInMs < 86400000L * 2){
+                        builder.append(String.format(Locale.US, "1 day + %1$tR:%1$tS.%1$tL", calendar));
+                    } else {
+                        final int days = (int) (timeSinceBootInMs / 86400000L);
+                        builder.append(String.format(Locale.US, "%1$d days + %2$tR:%2$tS.%2$tL", days, calendar));
+                    }
+
                     mPduCount.setText(pduCount);
-                    mTimeSinceReboot.setText(timeSinceBoot);
+                    mTimeSinceReboot.setText(builder.toString());
                 }
 
                 break;
@@ -628,13 +667,47 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
         }
     }
 
+    private void updateUiOnDisconnection() {
+        mFrameTypeView.setText("");
+        mNamespaceId.setText("");
+        mInstanceId.setText("");
+        mFrameTypeView.setText("");
+        mUrl.setText("");
+        mFrameTypeView.setText("");
+        mEtlm.setText("");
+        mEtlmSalt.setText("");
+        mEtlmMessageIntCheck.setText("");
+        mFrameTypeView.setText("");
+        mVoltage.setText("");
+        mTemperature.setText("");
+        mPduCount.setText("");
+        mTimeSinceReboot.setText("");
+        mFrameTypeView.setText("");
+        mTimerExponent.setText("");
+        mClockValue.setText("");
+        mEid.setText("");
+        mFrameTypeView.setText("");
+        mUrlDataContainer.setVisibility(View.GONE);
+        mUidDataContainer.setVisibility(View.GONE);
+        mTlmDataContainer.setVisibility(View.GONE);
+        mEtlmDataContainer.setVisibility(View.GONE);
+        mEidDataContainer.setVisibility(View.GONE);
+        if(mRefreshActiveSlot != null) {
+            mRefreshActiveSlot.setOnClickListener(null);
+            mRefreshActiveSlot = null;
+        }
+
+        if(mClearActiveSlot != null) {
+            mClearActiveSlot.setOnClickListener(null);
+            mClearActiveSlot = null;
+        }
+    }
+
     private void updateActiveSlotSpinner(int maxSupportedSlots) {
         mMaxSupportedSlots = new ArrayList<>();
-
         for (int i = 0; i < maxSupportedSlots; i++) {
             mMaxSupportedSlots.add("Slot " + i);
         }
-
         mMaxActiveSlotsAdapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_spinner_item, mMaxSupportedSlots);
         mMaxActiveSlotsAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         mIsActiveSlotAdapterUpdated = true;
@@ -654,7 +727,6 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
     @Override
     public void onStop() {
         super.onStop();
-
         if (mBounnd)
             getActivity().unbindService(mServiceConnection);
     }
@@ -662,6 +734,8 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
     @Override
     public void onDestroy() {
         super.onDestroy();
+        final MainActivity parent = (MainActivity) mContext;
+        parent.setUpdateFragment(null);
 
         if (getActivity().isFinishing()) {
             final Activity activity = getActivity();
@@ -676,8 +750,25 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
             mConnectionProgressDialog.dismiss();
         }
 
-        final MainActivity parent = (MainActivity) mContext;
-        parent.setUpdateFragment(null);
+        unbindImageViews();
+    }
+
+    private void unbindImageViews(){
+        mEditAdvInterval.setImageBitmap(null);
+        mEditAdvInterval.setImageDrawable(null);
+
+        mEditRadioTxPower.setImageBitmap(null);
+        mEditRadioTxPower.setImageDrawable(null);
+
+        mShowSlotInfo.setImageBitmap(null);
+        mShowSlotInfo.setImageDrawable(null);
+
+        if(mClearActiveSlot != null) {
+            mClearActiveSlot.setImageBitmap(null);
+        }
+        if(mRefreshActiveSlot != null) {
+            mRefreshActiveSlot.setImageBitmap(null);
+        }
     }
 
     @Override
@@ -733,7 +824,6 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
         mProgressDialog = new ProgressDialog(getActivity());
         mProgressDialog.setCancelable(false);
         mProgressDialog.setCanceledOnTouchOutside(false);
-        mConnectButton = (Button) view.findViewById(R.id.btn_connect);
 
         mConnectionProgressDialog = new ProgressDialog(getActivity());
         mConnectionProgressDialog.setCancelable(false);
@@ -747,9 +837,6 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
             }
         });
 
-
-
-        initDataFromSharedPrefs();
         // Configure the CONNECT / DISCONNECT button
         mConnectButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -769,7 +856,6 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
                 } else {
                     mBinder.disconnectAndClose();
                     updateUiForBeacons(BluetoothProfile.STATE_DISCONNECTED, UpdateService.LOCKED);
-
                 }
             }
         });
@@ -823,6 +909,10 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
                 if (mIsActiveSlotAdapterUpdated)
                     mIsActiveSlotAdapterUpdated = false;
                 else {
+                    mProgressDialog.setTitle(getString(R.string.switching_slots));
+                    mProgressDialog.setMessage(getString(R.string.please_wait_switching_slots));
+                    mProgressDialog.show();
+                    mProgressDialogHandler.postDelayed(mRunnableHandler, 10000);
                     mEikGenerated = false;
                     mBinder.changeToSelectedActiveSlot(data);
                 }
@@ -851,21 +941,10 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
         return (capabilities & IS_VARIABLE_TX_POWER_SUPPORTED) > 0;
     }
 
-    private void initDataFromSharedPrefs() {
-        /*final SharedPreferences sharedPreferences = getActivity().getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
-        final String serviceEcdhKey = sharedPreferences.getString(SERVICE_ECDH_KEY, "");
-        if (!serviceEcdhKey.isEmpty()) {
-            mServiceEcdhKey = new byte[32];
-            ParserUtils.setByteArrayValue(mServiceEcdhKey, 0, serviceEcdhKey);
-        }*/
-    }
-
     @Override
     public void onViewCreated(final View view, final Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
         setHasOptionsMenu(false);
-
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(mServiceBroadcastReceiver, createIntentFilters());
     }
 
@@ -873,6 +952,36 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
     @Override
     public void onCreateOptionsMenu(final Menu menu, final MenuInflater inflater) {
         inflater.inflate(R.menu.menu_update, menu);
+
+        MenuItem itemClearActiveSlot = menu.findItem(R.id.action_clear_slot);
+        itemClearActiveSlot.setActionView(R.layout.menu_clear_active_slot);
+        mClearActiveSlot = (ImageView) itemClearActiveSlot.getActionView();
+        mClearActiveSlot.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ClearSlotDialogFragment clearSlotDialogFragment = ClearSlotDialogFragment.newInstance();
+                clearSlotDialogFragment.show(getChildFragmentManager(), null);
+            }
+        });
+
+
+        MenuItem itemRefreshActiveSlot = menu.findItem(R.id.action_refresh_slot);
+        itemRefreshActiveSlot.setActionView(R.layout.menu_refresh_active_slot);
+        mRefreshActiveSlot = (ImageView) itemRefreshActiveSlot.getActionView();
+        mRefreshActiveSlot.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mBinder != null) {
+                    if (mProgressDialog != null) {
+                        mProgressDialog.setTitle(getString(R.string.prog_dialog_reading));
+                        mProgressDialog.setMessage(getString(R.string.prog_dialog_rw_adv_slot_msg));
+                        mProgressDialog.show();
+                        mProgressDialogHandler.postDelayed(mRunnableHandler, 10000);
+                    }
+                    mBinder.startReadingCharacteristicsForActiveSlot();
+                }
+            }
+        });
     }
 
     @Override
@@ -904,7 +1013,7 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
                 }
                 return true;
             case R.id.action_ecdh_info:
-                if (mBeaconPublicEcdhKey != null) {
+                if (mBeaconPublicEcdhKey != null && mFrameType == TYPE_EID) {
                     EcdhKeyInfoDialogFragment ecdhKeyInfoDialogFragment = EcdhKeyInfoDialogFragment.newInstance(mActiveSlot, mFrameType,
                             ParserUtils.bytesToHex(mBeaconPublicEcdhKey, 0, 32, true), ParserUtils.bytesToHex(mEncryptedIdentityKey, 0, 16, true),
                             ParserUtils.bytesToHex(mDecryptedIdentityKey, 0, 16, true));
@@ -941,8 +1050,34 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
                 RemainConnectableDialogFragment remainConnectableDialogFragment = RemainConnectableDialogFragment.newInstance(mRemainConnectable);
                 remainConnectableDialogFragment.show(getChildFragmentManager(), null);
                 break;
+            case R.id.action_update_settings:
+                Intent intent = new Intent(getActivity(), UpdateSettingsActivity.class);
+                startActivityForResult(intent, REQUEST_UPDATE_SETTINGS);
         }
         return false;
+    }
+
+    private void createShowcaseSequence(){
+        if(((MainActivity)mContext).getTabPosition() == 1) {
+            ShowcaseConfig config = new ShowcaseConfig();
+            config.setDelay(500);
+            MaterialShowcaseSequence sequence = new MaterialShowcaseSequence(getActivity(), TOOLBAR_BUTTON_HELP);
+            sequence.setConfig(config);
+            sequence.addSequenceItem(mShowSlotInfo,
+                    getString(R.string.all_slot_showcase), getString(R.string.got_it));
+            sequence.addSequenceItem(mShowBroadcastCapabilities,
+                    getString(R.string.capabilities_showcase), getString(R.string.got_it));
+            sequence.addSequenceItem(mActiveSlots,
+                    getString(R.string.active_slots_showcase), getString(R.string.got_it));
+            sequence.addSequenceItem(mEditSlot,
+                    getString(R.string.edit_slot_showcase), getString(R.string.got_it));
+            sequence.addSequenceItem(mClearActiveSlot,
+                    getString(R.string.clear_slot_showcase), getString(R.string.got_it));
+            sequence.addSequenceItem(mRefreshActiveSlot,
+                    getString(R.string.refresh_slot_showcase), getString(R.string.got_it));
+            sequence.start();
+        }
+
     }
 
     private IntentFilter createIntentFilters() {
@@ -1044,7 +1179,6 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
 
             Log.d(TAG, "request:" + body.toString(2));
         } catch (JSONException e) {
-            //logAndShowToast("JSONException building request body", e);
             return null;
         }
         return body;
@@ -1074,7 +1208,6 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
 
             Log.d(TAG, "request:" + body.toString(2));
         } catch (JSONException e) {
-            //logAndShowToast("JSONException building request body", e);
             return null;
         }
         return body;
@@ -1142,6 +1275,8 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
         LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(mServiceBroadcastReceiver);
         Log.v(TAG, "Receiver unregistered!");
         mServiceBroadcastReceiver = null;
+        mClearActiveSlot = null;
+        mRefreshActiveSlot = null;
     }
 
     @Override
@@ -1188,19 +1323,21 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
             case BluetoothProfile.STATE_DISCONNECTED:
                 setHasOptionsMenu(false);
                 getActivity().invalidateOptionsMenu();
+                if(mClearActiveSlot != null) {
+                    mClearActiveSlot.setImageBitmap(null);
+                    mClearActiveSlot = null;
+                }
+                if(mRefreshActiveSlot != null) {
+                    mRefreshActiveSlot.setImageBitmap(null);
+                    mRefreshActiveSlot = null;
+                }
                 mBeaconHelp.setVisibility(View.VISIBLE);
                 mBeaconConfigurationContainer.setVisibility(View.GONE);
                 mFrameTypeContainer.setVisibility(View.GONE);
                 //clear all resources on disconnection
                 mBeaconPublicEcdhKey = null;
                 mDecryptedIdentityKey = null;
-                /*if (mServiceEcdhKey != null) {
-                    final SharedPreferences sharedPreferences = getActivity().getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putString(SERVICE_ECDH_KEY, ParserUtils.bytesToHex(mServiceEcdhKey, 0, 32, false)).apply();
-                }*/
                 mServiceEcdhKey = null;
-                mBeaconEcdhPrivateKey = null;
                 mIsBeaconLocked = true;
                 if(mActiveSlotsTypes != null)
                     mActiveSlotsTypes.clear();
@@ -1211,6 +1348,7 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
     @Override
     public void unlockBeacon(byte[] encryptedLockCode, final byte[] beaconLockCode) {
         if (mProgressDialog != null && !mProgressDialog.isShowing()) {
+            mProgressDialog.setTitle(getString(R.string.unlocking_beacon));
             mProgressDialog.setMessage(getString(R.string.unlock_and_read_all_slots));
             mProgressDialog.show();
         }
@@ -1308,7 +1446,6 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
                                 byte[] beaconPrivateEcdhKey = new byte[32];
                                 new Random().nextBytes(beaconPrivateEcdhKey);
                                 Log.d(TAG, "Beacon ECDH Private Key: " + ParserUtils.bytesToHex(beaconPrivateEcdhKey, 0, 32, false));
-                                mBeaconEcdhPrivateKey = ParserUtils.bytesToHex(beaconPrivateEcdhKey, 0, 32, false);
                                 generator = new EddystoneEidrGenerator(mServiceEcdhKey, beaconPrivateEcdhKey);
                                 mBeaconPublicEcdhKey = generator.getBeaconPublicKey();
                                 Log.d(TAG, "Beacon ECDH Public Key: " + ParserUtils.bytesToHex(mBeaconPublicEcdhKey, 0, 32, false));
@@ -1548,6 +1685,16 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
                     showToast(getString(R.string.rationale_permission_denied));
                 }
                 break;
+            case REQUEST_UPDATE_SETTINGS:
+                if (resultCode == Activity.RESULT_OK){
+                    final boolean tutorials_enabled = data.getExtras().getBoolean("TUTORIALS_ENABLED", false);
+                    Log.v(TAG, "background scanning enableD? " + tutorials_enabled);
+                    if(tutorials_enabled){
+                        createShowcaseSequence();
+                    }
+
+                }
+                break;
         }
     }
 
@@ -1576,7 +1723,7 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
         startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
     }
 
-    public boolean isLocationEnabled() {
+    private boolean isLocationEnabled() {
         if (checkIfVersionIsMarshmallowOrAbove()) {
             int locationMode = Settings.Secure.LOCATION_MODE_OFF;
 

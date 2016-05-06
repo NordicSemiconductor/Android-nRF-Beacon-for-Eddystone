@@ -249,6 +249,7 @@ public class UpdateService extends Service {
                     mStartReadingInitialCharacteristics = false;
                     add(RequestType.READ_CHARACTERISTIC, mActiveSlotCharacteristic);
                 }
+
             } else if (EDDYSTONE_ADVERTISING_INTERVAL_UUID.equals(characteristic.getUuid())) {
                 add(RequestType.READ_CHARACTERISTIC, mAdvertisingIntervalCharacteristic);
             } else if (EDDYSTONE_RADIO_TX_POWER_UUID.equals(characteristic.getUuid())) {
@@ -256,7 +257,6 @@ public class UpdateService extends Service {
             } else if (mAdvancedAdvertisedTxPowerCharacteristic != null && EDDYSTONE_ADVANCED_ADVERTISED_TX_POWER_UUID.equals(characteristic.getUuid())) {
                 add(RequestType.READ_CHARACTERISTIC, mAdvancedAdvertisedTxPowerCharacteristic);
             } else if (EDDYSTONE_LOCK_STATE_UUID.equals(characteristic.getUuid())) {
-                //broadcastLockState(ParserUtils.getIntValue(characteristic.getValue(), 0, BluetoothGattCharacteristic.FORMAT_UINT8));
                 add(RequestType.READ_CHARACTERISTIC, mLockStateCharacteristic);
             } else if (EDDYSTONE_UNLOCK_UUID.equals(characteristic.getUuid())) {
                 if (mIsBeaconLocked)
@@ -776,7 +776,7 @@ public class UpdateService extends Service {
             if(mReadlAllSlots) {
                 mActiveSlotsTypes.add("EMPTY");
                 mSlotCounter = mSlotCounter + 1 ;
-                if(mSlotCounter <= mMaxSlots - 1 ) {
+                if(mSlotCounter <= mMaxSlots - 1) {
                     if (mActiveSlotCharacteristic.setValue(new byte[]{(byte) mSlotCounter}))
                         add(RequestType.WRITE_CHARACTERISTIC, mActiveSlotCharacteristic);
                 } else stopReadingAllActiveSlots();
@@ -865,7 +865,7 @@ public class UpdateService extends Service {
                 if(mReadlAllSlots) {
                     mActiveSlotsTypes.add("EID");
                     mSlotCounter = mSlotCounter + 1 ;
-                    if(mSlotCounter <= mMaxSlots - 1 )
+                    if(mSlotCounter <= mMaxSlots - 1)
                         if (mActiveSlotCharacteristic.setValue(new byte[]{(byte) mSlotCounter}))
                             add(RequestType.WRITE_CHARACTERISTIC, mActiveSlotCharacteristic);
                         else stopReadingAllActiveSlots();
@@ -881,7 +881,6 @@ public class UpdateService extends Service {
                 LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
                 break;
         }
-        //add(RequestType.READ_CHARACTERISTIC, mAdvancedRemainConnectableCharacteristic);
     }
 
     private void broadcastAdvancedFactoryReset(final int factoryReset) {
@@ -939,10 +938,10 @@ public class UpdateService extends Service {
     private void startReadingCharacteristicsForActiveSlot() {
         add(RequestType.READ_CHARACTERISTIC, mAdvertisingIntervalCharacteristic);
         add(RequestType.READ_CHARACTERISTIC, mRadioTxPowerCharacteristic);
-        if (mAdvancedAdvertisedTxPowerCharacteristic != null)
+        if (mAdvancedAdvertisedTxPowerCharacteristic != null && !mReadlAllSlots)
             add(RequestType.READ_CHARACTERISTIC, mAdvancedAdvertisedTxPowerCharacteristic);
         add(RequestType.READ_CHARACTERISTIC, mReadWriteAdvSlotCharacteristic);
-        if (mAdvancedRemainConnectableCharacteristic != null)
+        if (mAdvancedRemainConnectableCharacteristic != null & !mReadlAllSlots)
             add(RequestType.READ_CHARACTERISTIC, mAdvancedRemainConnectableCharacteristic);
         broadcastAllSlotInformation();
     }

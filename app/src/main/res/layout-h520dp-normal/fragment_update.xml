@@ -23,8 +23,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/root_view">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- The size of text below must be fixed, therefore dp are used instead of sp -->
 
@@ -189,13 +188,13 @@
                     <TextView
                         android:layout_width="0dp"
                         android:layout_weight="1"
-                        android:layout_height="wrap_content"
+                        android:layout_height="match_parent"
                         android:text="@string/frame_type" />
 
                     <TextView
                         android:id="@+id/frame_type"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"/>
+                        android:layout_height="match_parent"/>
                 </LinearLayout>
 
                 <LinearLayout
@@ -219,13 +218,13 @@
                         <TextView
                             android:layout_width="0dp"
                             android:layout_weight="1"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
                             android:text="@string/namespace_id" />
 
                         <TextView
                             android:id="@+id/namespace_id"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"/>
+                            android:layout_height="match_parent"/>
                     </LinearLayout>
 
                     <LinearLayout
@@ -238,13 +237,13 @@
                         <TextView
                             android:layout_width="0dp"
                             android:layout_weight="1"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
                             android:text="@string/instance_id" />
 
                         <TextView
                             android:id="@+id/instance_id"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"/>
+                            android:layout_height="match_parent"/>
                     </LinearLayout>
 
                 </LinearLayout>
@@ -270,13 +269,13 @@
                         <TextView
                             android:layout_width="0dp"
                             android:layout_weight="1"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
                             android:text="@string/url_data" />
 
                         <TextView
                             android:id="@+id/url_data"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"/>
+                            android:layout_height="match_parent"/>
                     </LinearLayout>
 
                 </LinearLayout>
@@ -301,13 +300,13 @@
                         <TextView
                             android:layout_width="0dp"
                             android:layout_weight="1"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
                             android:text="@string/voltage" />
 
                         <TextView
                             android:id="@+id/voltage"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"/>
+                            android:layout_height="match_parent"/>
                     </LinearLayout>
 
                     <LinearLayout
@@ -318,13 +317,13 @@
                         <TextView
                             android:layout_width="0dp"
                             android:layout_weight="1"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
                             android:text="@string/temperature" />
 
                         <TextView
                             android:id="@+id/temperature"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"/>
+                            android:layout_height="match_parent"/>
                     </LinearLayout>
 
                     <LinearLayout
@@ -335,13 +334,13 @@
                         <TextView
                             android:layout_width="0dp"
                             android:layout_weight="1"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
                             android:text="@string/advertiser_count" />
 
                         <TextView
                             android:id="@+id/advertiser_count"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"/>
+                            android:layout_height="match_parent"/>
                     </LinearLayout>
 
                     <LinearLayout
@@ -352,13 +351,13 @@
                         <TextView
                             android:layout_width="0dp"
                             android:layout_weight="1"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
                             android:text="@string/time_since_reboot" />
 
                         <TextView
                             android:id="@+id/time_since_boot"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"/>
+                            android:layout_height="match_parent"/>
                     </LinearLayout>
 
                 </LinearLayout>
@@ -382,14 +381,14 @@
                         android:orientation="horizontal" >
                         <TextView
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
                             android:text="@string/ecrypted_tlm" />
 
                         <TextView
                             android:id="@+id/etlm_data"
                             android:layout_width="0dp"
                             android:layout_weight="1"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
                             android:gravity="right"/>
                     </LinearLayout>
 
@@ -401,14 +400,14 @@
                         android:orientation="horizontal" >
                         <TextView
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
                             android:text="@string/salt" />
 
                         <TextView
                             android:id="@+id/etlm_salt"
                             android:layout_width="0dp"
                             android:layout_weight="1"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
                             android:gravity="right"/>
                     </LinearLayout>
 
@@ -420,14 +419,14 @@
                         android:orientation="horizontal" >
                         <TextView
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
                             android:text="@string/msg_int_check" />
 
                         <TextView
                             android:id="@+id/etlm_message_integrity_check"
                             android:layout_width="0dp"
                             android:layout_weight="1"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
                             android:gravity="right"/>
                     </LinearLayout>
                 </LinearLayout>
@@ -452,13 +451,13 @@
                         <TextView
                             android:layout_width="0dp"
                             android:layout_weight="1"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
                             android:text="@string/eid_data" />
 
                         <TextView
                             android:id="@+id/eid"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"/>
+                            android:layout_height="match_parent"/>
                     </LinearLayout>
 
                     <LinearLayout
@@ -470,13 +469,13 @@
                         <TextView
                             android:layout_width="0dp"
                             android:layout_weight="1"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
                             android:text="@string/timer_exponent" />
 
                         <TextView
                             android:id="@+id/timer_exponent"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"/>
+                            android:layout_height="match_parent"/>
                     </LinearLayout>
 
                     <LinearLayout
@@ -488,13 +487,13 @@
                         <TextView
                             android:layout_width="0dp"
                             android:layout_weight="1"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
                             android:text="@string/clock_value" />
 
                         <TextView
                             android:id="@+id/clock_value"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"/>
+                            android:layout_height="match_parent"/>
                     </LinearLayout>
 
                 </LinearLayout>
@@ -518,14 +517,14 @@
                     <TextView
                         android:id="@+id/adv_interval_ms"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="match_parent"
                         android:textSize="16sp"
-                        android:text="26"/>
+                        android:gravity="center_vertical"/>
 
                     <ImageView
                         android:id="@+id/edit_adv_interval"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="match_parent"
                         android:src="@drawable/ic_edit"
                         android:layout_centerVertical="true"
                         android:layout_alignParentRight="true"
@@ -551,67 +550,19 @@
                     <TextView
                         android:id="@+id/radio_tx_power"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="match_parent"
                         android:textSize="16sp"
-                        android:text="26"/>
+                        android:gravity="center_vertical"/>
 
                     <ImageView
                         android:id="@+id/edit_radio_tx_power"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="match_parent"
                         android:src="@drawable/ic_edit"
                         android:layout_centerVertical="true"
                         android:layout_alignParentRight="true"
                         android:layout_marginLeft="5dp"
                         android:background="?attr/selectableItemBackground"/>
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/lock_state_container"
-                    android:layout_width="match_parent"
-                    android:layout_height="@dimen/row_height"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingLeft="@dimen/feature_section_padding"
-                    android:paddingRight="@dimen/feature_section_padding"
-                    android:visibility="gone">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="wrap_content"
-                        android:text="@string/lock_state" />
-
-                    <TextView
-                        android:id="@+id/lock_state"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"/>
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/unlock_container"
-                    android:layout_width="match_parent"
-                    android:layout_height="@dimen/row_height"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingLeft="@dimen/feature_section_padding"
-                    android:paddingRight="@dimen/feature_section_padding"
-                    android:visibility="gone">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="wrap_content"
-                        android:text="@string/unlock" />
-
-                    <ImageView
-                        android:id="@+id/unlock"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:src="@drawable/ic_unlock"
-                        android:layout_centerVertical="true"
-                        android:layout_alignParentRight="true"/>
                 </LinearLayout>
             </LinearLayout>
         </ScrollView>

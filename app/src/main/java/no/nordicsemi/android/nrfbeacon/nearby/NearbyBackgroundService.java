@@ -29,14 +29,6 @@ public class NearbyBackgroundService extends IntentService {
     public static final String NEARBY_DEVICE_DATA = "NEARBY_DEVICE_DATA";
     private static final String TAG = "BEACON";
 
-    private static final int OPEN_ACTIVITY_REQ = 195; // random
-    private static final int NOTIFICATION_ID = 1;
-
-    private NotificationManager mNotificationManager;
-    private Intent mParentIntent;
-    private PendingIntent mPendingIntent;
-    private ArrayList<Message> mNearbyDevicesMessageList;
-
     public NearbyBackgroundService(String name) {
         super(name);
     }
@@ -48,8 +40,6 @@ public class NearbyBackgroundService extends IntentService {
     @Override
     public void onCreate() {
         super.onCreate();
-        mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        mNearbyDevicesMessageList = new ArrayList<>();
     }
 
 
