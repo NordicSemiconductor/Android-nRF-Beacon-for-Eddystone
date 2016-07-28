@@ -47,13 +47,17 @@ public class AuthTaskUrlShortener extends AsyncTask <Void, Void, Void> {
     private static final String AUTH_SCOPE_URL_SHORTENER = "oauth2:https://www.googleapis.com/auth/urlshortener";
     private Activity mActivity;
     private Account mAccount;
+    private JSONObject mJsonObject;
+    private String mRequestType;
 
-    public AuthTaskUrlShortener(final Callback mCallBack, final String longUrl, Activity context, Account account){
+    public AuthTaskUrlShortener(final Callback mCallBack, final String longUrl, Activity context, Account account, JSONObject jsonObject, String requestType){
         this.mOkHttpClient = new OkHttpClient();
         this.mCallBack = mCallBack;
         this.longUrl = longUrl;
         this.mActivity = context;
         this.mAccount = account;
+        this.mJsonObject = jsonObject;
+        this.mRequestType = requestType;
     }
 
     @Override
@@ -68,9 +72,20 @@ public class AuthTaskUrlShortener extends AsyncTask <Void, Void, Void> {
         try {
             token = GoogleAuthUtil.getToken(mActivity, mAccount, SCOPE);
             Request.Builder requestBuilder = new Request.Builder()
-                    .header(AUTHORIZATION, BEARER + token)
-                    .url(BASE_URL)
-                    .post(RequestBody.create(MEDIA_TYPE_JSON, jsonObject.toString()));
+                    .header(AUTHORIZATION, BEARER + token);
+
+                    switch (mRequestType){
+                        case Utils.REQUEST_GET:
+                            requestBuilder.url(BASE_URL + "?shortUrl=" + mJsonObject.getString("shortUrl"));
+                            requestBuilder.get();//get(RequestBody.create(MEDIA_TYPE_JSON, mJsonObject.toString()));
+
+                            break;
+                        case Utils.REQUEST_POST:
+                            requestBuilder.url(BASE_URL);
+                            requestBuilder.post(RequestBody.create(MEDIA_TYPE_JSON, mJsonObject.toString()));
+                            break;
+
+                    }
 
             Request request = requestBuilder.build();
             mOkHttpClient.newCall(request).enqueue(new HttpCallback(mCallBack));
@@ -88,6 +103,8 @@ public class AuthTaskUrlShortener extends AsyncTask <Void, Void, Void> {
             // so this indicates something went wrong at a higher level.
             // TIP: Check for network connectivity before starting the AsyncTask.
             Log.e(TAG, "IOException", e);
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
         return null;
     }

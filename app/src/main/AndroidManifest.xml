@@ -22,8 +22,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="no.nordicsemi.android.nrfbeacon.nearby"
     android:installLocation="auto">
-
-    <uses-permission android:name="android.permission.GET_ACCOUNTS"/>
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
@@ -42,10 +40,6 @@
         <meta-data
             android:name="com.google.android.nearby.messages.API_KEY"
             android:value="YOUR_API_KEY_GOES_HERE" />
-        <meta-data
-            android:name="com.google.android.urlshortener.API_KEY"
-            android:value="YOUR_API_KEY_GOES_HERE" />
-
         <activity
             android:name=".LaunchActivity"
             android:label="@string/app_name">
@@ -60,6 +54,10 @@
             android:label="@string/app_name"
             android:noHistory="true"
             android:theme="@style/AppTheme.Fullscreen"></activity>
+        <activity
+            android:name=".ProjectSelectionActivity"
+            android:noHistory="true"
+            android:label="@string/app_name"/>
         <activity
             android:name=".MainActivity"
             android:icon="@drawable/ic_feature"

@@ -39,6 +39,7 @@ import android.widget.Toast;
 
 import no.nordicsemi.android.nrfbeacon.nearby.beacon.BeaconsFragment;
 import no.nordicsemi.android.nrfbeacon.nearby.update.UpdateFragment;
+import no.nordicsemi.android.nrfbeacon.nearby.util.Utils;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -104,8 +105,11 @@ public class MainActivity extends AppCompatActivity {
             public void onPageSelected(final int position) {
                 mTabPosition = position;
                 switch (position){
+                    case 0:
+
+                        break;
                     case 1:
-                        mUpdateFragment.ensurePermissionGranted(new String[]{Manifest.permission.GET_ACCOUNTS});
+                        //mUpdateFragment.ensurePermissionGranted(new String[]{Manifest.permission.GET_ACCOUNTS});
                         break;
                 }
             }

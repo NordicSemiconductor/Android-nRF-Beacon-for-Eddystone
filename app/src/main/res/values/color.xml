@@ -35,4 +35,5 @@
     <color name="actionMode">#FF7E7E7E</color>
     <color name="actionModeDark">#FF575757</color>
     <color name="darkGray">#AAABAF</color>
+    <color name="greyBg">#9A9A9A</color>
 </resources>

@@ -1,4 +1,4 @@
-package no.nordicsemi.android.nrfbeacon.nearby;
+package no.nordicsemi.android.nrfbeacon.nearby.common;
 
 import android.content.Context;
 import android.content.Intent;
@@ -18,6 +18,8 @@ import com.google.android.gms.nearby.messages.Message;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+
+import no.nordicsemi.android.nrfbeacon.nearby.R;
 
 /**
  * Created by rora on 22.10.2015.
@@ -81,10 +83,10 @@ public class EddystoneBeaconsAdapter extends BaseAdapter {
         }
         if (namespace != null && namespace.length() > 0)
             viewHolder.tvNamespace.setText(namespace);
-        //viewHolder.tvAttachment.setText(attachment);
+        //viewHolder.projectId.setText(attachment);
 
         if(attachmentContent != null && attachmentContent.toString().startsWith("http")) {
-            //viewHolder.tvAttachment.setPaintFlags(viewHolder.tvAttachment.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+            //viewHolder.projectId.setPaintFlags(viewHolder.projectId.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
             viewHolder.tvAttachment.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {

@@ -30,13 +30,16 @@ https://play.google.com/store/apps/details?id=no.nordicsemi.android.nrfbeacon.ne
 ## Setting up the project
 -Two important steps would be to enable the Nearby API, the Proximity API and URL Shortener API from the Google developer console's api manager.
 
--Generate an API Key for android by clicking in credentials 
+-Generate an API Key for android by clicking in credentials which will be used for the Nearby API. Make sure to enter the API Key for the Nearby API in the manifest file
+
+-Generate a browser API Key by clicking in credentials which will be used for the URL Shortener API. Make sure to add this api key in the class ReadWriteAdvertisementSlotDialogFragment 
 
 -Next using the debug keystore retreive the SHA1 Key and enter it with your project package name
 
--Next Generate an OAuth 2.0 Client for android and follow the same step as above by entering the SHA1 and the package name
+-Generate an OAuth2.0 Client for Web Application and include the client id and the client secret in the calls to the Authorization end points. This is to allow server side api access with the integration of Google Sign-In. Google Sign-In has been integrated in the app in order to maintain a seamless signin procedure. You can read about this more on https://developers.google.com/identity/sign-in/android/start-integrating and follow the steps to generate your own Json file for google services. Don't forget to read about the Migration Guide on it https://developers.google.com/identity/sign-in/android/migration-guide
 
-Make sure to enter the API Key in the manifest file
+-Read more about the Project Delegation on the Proximity API. This will allow only users to register beacons to projects which they have write access to. This means that the user has to be either an owner or an editor which could be set on the developer console project to be able to register beacons. In case you don't own a project make sure you create a project first and then enable Proximity API and Nearby API if you are thinking of using the Nearby API for scanning beacons.
+more information about this could be found on https://developers.google.com/beacons/proximity/projects-and-ownership
 
 Follow the full instructions from the google documentation  https://developers.google.com/beacons/get-started#obtain_and_provision_beacons
 
@@ -44,8 +47,8 @@ Follow the full instructions from the google documentation  https://developers.g
 
 -Android 4.3 or newer is required.
 
--Tested on Samsung S3 with Android 4.3, on Nexus 5, 6 and 9 with lollipop & Marshmallow and Samsung Galaxy S6, S7 with Marshmallow.
+-Tested on Samsung S3 with Android 4.3, on Nexus 5, 6 and 9 with lollipop, Marshmallow & N Developer Preview 5 and Samsung Galaxy S6, S7 with Marshmallow.
 
 -Location Services need to be enabled for scanning on android 6.0 Marshmallow requesting a runtime persmission ACCESS_COARSE_LOCATION
 
--GET_ACCOUNTS permission is required in order to select the account to register and allow access to the Google Proximity API and URL Shortener API.
+-Google Sign-In has be integrated to Authorize the application for the Proximity API, Google Cloud Resource Manager permission.

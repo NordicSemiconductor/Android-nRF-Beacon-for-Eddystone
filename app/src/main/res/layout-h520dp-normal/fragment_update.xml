@@ -57,13 +57,63 @@
         android:visibility="visible"/>
 
     <LinearLayout
+        android:orientation="horizontal" android:layout_width="match_parent"
+        android:layout_height="?actionBarSize"
+        android:background="@color/tabTextColor"
+        android:paddingStart="@dimen/activity_horizontal_margin"
+        android:paddingEnd="@dimen/activity_horizontal_margin"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp"
+        android:id="@+id/container"
+        android:layout_below="@id/beacon_update_help"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/account_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Account:"/>
+            <TextView
+                android:id="@+id/project_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Project:"
+                android:paddingTop="4dp"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/account"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="rajaratnam.roshan@gmail.com"/>
+            <TextView
+                android:id="@+id/project"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="nearby"
+                android:paddingTop="4dp"/>
+
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
         android:id="@+id/beacon_configuration_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="@dimen/feature_horizontal_margin"
         android:layout_marginRight="@dimen/feature_horizontal_margin"
         android:layout_marginTop="10dp"
-        android:layout_below="@+id/beacon_update_help"
+        android:layout_below="@+id/container"
         android:background="@color/backgroundColor"
         style="@style/Widget.List"
         android:orientation="vertical"

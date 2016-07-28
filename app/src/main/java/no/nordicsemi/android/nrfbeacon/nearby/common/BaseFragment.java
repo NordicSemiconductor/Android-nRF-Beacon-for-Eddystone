@@ -48,7 +48,7 @@ public abstract class BaseFragment extends Fragment implements PermissionRationa
     public void onRequestPermission() {
         if(mPermissionList != null && mPermissionList.size() > 0)
             requestPermissions(mPermissionList.toArray(new String[mPermissionList.size()]), REQUEST_PERMISSION_REQ_CODE);
-        else checkForUngrantedPermissions(new String [] {Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.GET_ACCOUNTS});
+        else checkForUngrantedPermissions(new String [] {Manifest.permission.ACCESS_COARSE_LOCATION});
     }
 
     /**
@@ -74,10 +74,6 @@ public abstract class BaseFragment extends Fragment implements PermissionRationa
                     if (ActivityCompat.shouldShowRequestPermissionRationale(getActivity(), permissions[i])) {
                         if(permissions[i] == Manifest.permission.ACCESS_COARSE_LOCATION) {
                             final PermissionRationaleDialogFragment dialog = PermissionRationaleDialogFragment.getInstance(getString(R.string.rationale_message_location));
-                            dialog.show(getChildFragmentManager(), null);
-                            return false;
-                        } else if(permissions[i] == Manifest.permission.GET_ACCOUNTS) {
-                            final PermissionRationaleDialogFragment dialog = PermissionRationaleDialogFragment.getInstance(getString(R.string.rationale_message_contacts));
                             dialog.show(getChildFragmentManager(), null);
                             return false;
                         }

@@ -26,7 +26,7 @@ import java.io.IOException;
 /**
  * A wrapper around OkHttp's Callback class that runs its methods on the UI thread.
  */
-class HttpCallback implements Callback {
+public class HttpCallback implements Callback {
   private final Callback delegate;
   private final Handler handler;
 

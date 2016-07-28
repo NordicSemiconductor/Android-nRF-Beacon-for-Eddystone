@@ -21,21 +21,17 @@
  */
 package no.nordicsemi.android.nrfbeacon.nearby.update;
 
-import android.accounts.Account;
-import android.accounts.AccountManager;
-import android.app.Activity;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.content.Context;
 import android.content.DialogInterface;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
+import android.text.SpannableString;
 import android.text.TextWatcher;
+import android.text.style.UnderlineSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -48,8 +44,10 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.auth.GoogleAuthException;
-import com.google.android.gms.auth.GoogleAuthUtil;
+import com.google.api.client.extensions.android.http.AndroidHttp;
+import com.google.api.client.extensions.android.json.AndroidJsonFactory;
+import com.google.api.services.urlshortener.Urlshortener;
+import com.google.api.services.urlshortener.model.Url;
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
@@ -59,14 +57,9 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 
-import no.nordicsemi.android.nrfbeacon.nearby.AuthorizedServiceTask;
 import no.nordicsemi.android.nrfbeacon.nearby.R;
-import no.nordicsemi.android.nrfbeacon.nearby.util.AuthTaskUrlShortener;
 import no.nordicsemi.android.nrfbeacon.nearby.util.ParserUtils;
-import uk.co.deanwild.materialshowcaseview.IShowcaseListener;
-import uk.co.deanwild.materialshowcaseview.MaterialShowcaseSequence;
-import uk.co.deanwild.materialshowcaseview.MaterialShowcaseView;
-import uk.co.deanwild.materialshowcaseview.ShowcaseConfig;
+import no.nordicsemi.android.nrfbeacon.nearby.util.Utils;
 
 /**
  * Created by rora on 07.03.2016.
@@ -208,25 +201,38 @@ public class ReadWriteAdvertisementSlotDialogFragment extends DialogFragment {
                         mButtonNeutral.setVisibility(View.VISIBLE);
                         mButtonNeutral.setText(getString(R.string.url_shorten_button));
                         mUrlInfoContainer.setVisibility(View.VISIBLE);
-                        mUrlShortenerContainer.setVisibility(View.GONE);
+                        /*mUrlShortenerContainer.setVisibility(View.GONE);*/
                         mUidInfoContainer.setVisibility(View.GONE);
                         mEidInfoContainer.setVisibility(View.GONE);
                         if (TYPE_URL == mFrameType) {
                             String url = ParserUtils.decodeUri(mReadWriteAdvSlotData, 2, mReadWriteAdvSlotData.length - 2);
-                            if(url.startsWith("https://www.")){
-                                url = url.replace("https://www.", "");
-                                mUrlTypes.setSelection(0);
-                            } else if(url.startsWith("http://www.")){
-                                url = url.replace("http://www.", "");
-                                mUrlTypes.setSelection(1);
-                            } else if(url.startsWith("https://")){
-                                url = url.replace("https://", "");
-                                mUrlTypes.setSelection(2);
-                            } else if(url.startsWith("https://")){
-                                url = url.replace("http://", "");
-                                mUrlTypes.setSelection(3);
+                            if(!url.contains("goo.gl")) {
+                                mUrlShortenerContainer.setVisibility(View.GONE);
+                                if (url.startsWith("https://www.")) {
+                                    url = url.replace("https://www.", "");
+                                    mUrlTypes.setSelection(0);
+                                } else if (url.startsWith("http://www.")) {
+                                    url = url.replace("http://www.", "");
+                                    mUrlTypes.setSelection(1);
+                                } else if (url.startsWith("https://")) {
+                                    url = url.replace("https://", "");
+                                    mUrlTypes.setSelection(2);
+                                } else if (url.startsWith("https://")) {
+                                    url = url.replace("http://", "");
+                                    mUrlTypes.setSelection(3);
+                                }
+                                mUrl.setText(url.trim());
+                            } else {
+                                mUrlShortenerContainer.setVisibility(View.VISIBLE);
+                                mUrlShortText.setText(url.trim());
+                                final JSONObject jsonObject = new JSONObject();
+                                try {
+                                    jsonObject.put("shortUrl", url);
+                                    expandUrl(url);
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
                             }
-                            mUrl.setText(url.trim());
 
 
                         }
@@ -308,14 +314,16 @@ public class ReadWriteAdvertisementSlotDialogFragment extends DialogFragment {
                         mInstanceId.setText(instance.toUpperCase());
                         break;
                     case 1:
-                        final String url = mUrl.getText().toString().trim();
+                        final String url = mUrlTypes.getSelectedItem().toString() + mUrl.getText().toString().trim();
 
                         if (!url.isEmpty()) {
-                            if(getUserAccount() != null)
-                                new AuthTaskUrlShortener(mUrlShortenerCallback, url, getActivity(), getUserAccount()).execute();
-                            else
-                                Toast.makeText(getActivity(), getString(R.string.user_account_unavailable), Toast.LENGTH_LONG).show();
-
+                            final JSONObject jsonObject = new JSONObject();
+                            try {
+                                jsonObject.put("longUrl", url);
+                                shortenUrl(url);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
                         }
                         break;
                 }
@@ -330,9 +338,11 @@ public class ReadWriteAdvertisementSlotDialogFragment extends DialogFragment {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                mUrl.setError(null);
-                if(mUrlShortenerContainer.getVisibility() == View.VISIBLE)
+
+                if(mUrlShortenerContainer.getVisibility() == View.VISIBLE && mUrl.getError() != null) {
+                    mUrl.setError(null);
                     mUrlShortenerContainer.setVisibility(View.GONE);
+                }
             }
 
             @Override
@@ -341,41 +351,8 @@ public class ReadWriteAdvertisementSlotDialogFragment extends DialogFragment {
             }
         });
 
-        final String name = getUserAccountName();
-        if(!name.isEmpty()) {
-            Account userAccount = null;
-            final Account[] accounts = AccountManager.get(getActivity()).getAccounts();
-            for (Account account : accounts) {
-                if (account.name.equals(name)) {
-                    userAccount = account;
-                    break;
-                }
-            }
-            new AuthorizedServiceTask(getActivity(), userAccount, AUTH_SCOPE_URL_SHORTENER).execute();
-        }
-
         updateUi();
         return alertDialog;
-    }
-
-    private String getUserAccountName(){
-        SharedPreferences mSharedPreferences = getContext().getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
-        return mSharedPreferences.getString(ACCOUNT_NAME_PREF, null);
-
-
-    }
-
-    private Account getUserAccount(){
-        final String name = getUserAccountName();
-        if(!name.isEmpty()) {
-            final Account[] accounts = AccountManager.get(getActivity()).getAccounts();
-            for (Account account : accounts) {
-                if (account.name.equals(name) && account.type.equals("com.google"))  {
-                    return account;
-                }
-            }
-        }
-        return null;
     }
 
     private boolean validateInput() {
@@ -565,9 +542,6 @@ public class ReadWriteAdvertisementSlotDialogFragment extends DialogFragment {
                 //GoogleAuthUtil.clearToken(getActivity(), token);
                 mUrlShortenerContainer.setVisibility(View.GONE);
                 Toast.makeText(getActivity(), response.body().string(), Toast.LENGTH_SHORT).show();
-                Account userAccount = getUserAccount();
-                if(userAccount != null)
-                    new AuthorizedServiceTask(getActivity(), userAccount, AUTH_SCOPE_URL_SHORTENER).execute();
             } else {
                 try {
                     mUrlShortenerContainer.setVisibility(View.VISIBLE);
@@ -582,4 +556,136 @@ public class ReadWriteAdvertisementSlotDialogFragment extends DialogFragment {
             }
         }
     };
+
+    private final Callback mUrlExpanderCallback = new Callback() {
+        @Override
+        public void onFailure(Request request, IOException e) {
+            Log.v(TAG, "Failure: " + request.toString());
+            if(mProgressDialog != null && mProgressDialog.isShowing())
+                mProgressDialog.dismiss();
+        }
+
+        @Override
+        public void onResponse(Response response) throws IOException {
+            if(mProgressDialog != null && mProgressDialog.isShowing())
+                mProgressDialog.dismiss();
+            if(!response.isSuccessful()){
+                //GoogleAuthUtil.clearToken(getActivity(), token);
+                mUrlShortenerContainer.setVisibility(View.GONE);
+                Toast.makeText(getActivity(), response.body().string(), Toast.LENGTH_SHORT).show();
+            } else {
+                try {
+                    mUrlShortenerContainer.setVisibility(View.VISIBLE);
+                    mUrl.setError(null);
+                    final JSONObject json = new JSONObject(response.body().string());
+                    String url = json.getString("longUrl");
+                    if (url.startsWith("https://www.")) {
+                        url = url.replace("https://www.", "");
+                        mUrlTypes.setSelection(0);
+                    } else if (url.startsWith("http://www.")) {
+                        url = url.replace("http://www.", "");
+                        mUrlTypes.setSelection(1);
+                    } else if (url.startsWith("https://")) {
+                        url = url.replace("https://", "");
+                        mUrlTypes.setSelection(2);
+                    } else if (url.startsWith("https://")) {
+                        url = url.replace("http://", "");
+                        mUrlTypes.setSelection(3);
+                    }
+                    mUrl.setText(url);
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }
+    };
+
+    private void shortenUrl(final String longUrl){
+        if(!Utils.API_KEY.equals(Utils.UTILS_API_KEY)) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Urlshortener.Builder builder = new Urlshortener.Builder(AndroidHttp.newCompatibleTransport(), AndroidJsonFactory.getDefaultInstance(), null)
+                                .setApplicationName(getString(R.string.app_name));
+                        Urlshortener urlshortener = builder.build();
+                        com.google.api.services.urlshortener.model.Url url = new Url();
+                        url.setLongUrl(longUrl);
+                        Urlshortener.Url.Insert insertUrl = urlshortener.url().insert(url);
+                        insertUrl.setKey(Utils.API_KEY);
+                        url = insertUrl.execute();
+                        final String newUrl = url.getId();
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                final SpannableString urlAttachment = new SpannableString(newUrl);
+                                urlAttachment.setSpan(new UnderlineSpan(), 0, newUrl.length(), 0);
+                                mUrlShortenerContainer.setVisibility(View.VISIBLE);
+                                mUrl.setError(null);
+                                mUrlShortText.setText(urlAttachment.toString());
+                            }
+                        });
+                    } catch (IOException ex) {
+                        Log.v(Utils.TAG, ex.getMessage());
+                    }
+                }
+            }).start();
+        }
+        else {
+            Toast.makeText(getActivity(), getString(R.string.api_key_error), Toast.LENGTH_LONG);
+        }
+    }
+
+    private void expandUrl(final String shortUrl) {
+        if(!Utils.API_KEY.equals(Utils.UTILS_API_KEY)) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Urlshortener.Builder builder = new Urlshortener.Builder(AndroidHttp.newCompatibleTransport(), AndroidJsonFactory.getDefaultInstance(), null)
+                                .setApplicationName(getString(R.string.app_name));
+                        Urlshortener urlshortener = builder.build();
+                        com.google.api.services.urlshortener.model.Url url = new Url();
+                        Urlshortener.Url.Get insertUrl = urlshortener.url().get(shortUrl);
+                        insertUrl.setKey(Utils.API_KEY);
+                        url = insertUrl.execute();
+                        final String newUrl = url.getLongUrl();
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                final SpannableString urlAttachment = new SpannableString(newUrl);
+                                urlAttachment.setSpan(new UnderlineSpan(), 0, newUrl.length(), 0);
+
+                                mUrlShortenerContainer.setVisibility(View.VISIBLE);
+                                mUrl.setError(null);
+                                String url = urlAttachment.toString();
+                                if (url.startsWith("https://www.")) {
+                                    url = url.replace("https://www.", "");
+                                    mUrlTypes.setSelection(0);
+                                } else if (url.startsWith("http://www.")) {
+                                    url = url.replace("http://www.", "");
+                                    mUrlTypes.setSelection(1);
+                                } else if (url.startsWith("https://")) {
+                                    url = url.replace("https://", "");
+                                    mUrlTypes.setSelection(2);
+                                } else if (url.startsWith("https://")) {
+                                    url = url.replace("http://", "");
+                                    mUrlTypes.setSelection(3);
+                                }
+                                mUrl.setText(url);
+
+                            }
+                        });
+                    } catch (IOException ex) {
+                        Log.v(Utils.TAG, ex.getMessage());
+                    }
+                }
+            }).start();
+        }
+        else {
+            Toast.makeText(getActivity(), getString(R.string.api_key_error), Toast.LENGTH_LONG);
+        }
+    }
 }

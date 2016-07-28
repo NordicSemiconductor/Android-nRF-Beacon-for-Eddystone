@@ -14,20 +14,12 @@
 
 package com.google.sample.libproximitybeacon;
 
-import com.google.android.gms.auth.GoogleAuthException;
-import com.google.android.gms.auth.GoogleAuthUtil;
-import com.google.android.gms.auth.GooglePlayServicesAvailabilityException;
-import com.google.android.gms.auth.UserRecoverableAuthException;
-
 import android.accounts.Account;
 import android.app.Activity;
-import android.app.Dialog;
 import android.content.Context;
-import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
-import android.util.Log;
 
-import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
@@ -36,13 +28,8 @@ import com.squareup.okhttp.RequestBody;
 
 import org.json.JSONObject;
 
-import java.io.IOException;
-
 public class ProximityBeaconImpl implements ProximityBeacon {
-  private static final String TAG = ProximityBeaconImpl.class.getSimpleName();
-  private static final int REQUEST_CODE_RECOVER_FROM_PLAY_SERVICES_ERROR_FOR_PRX_API = 1003;
   private static final String ENDPOINT = "https://proximitybeacon.googleapis.com/v1beta1/";
-  private static final String SCOPE = "oauth2:https://www.googleapis.com/auth/userlocation.beacon.registry";
   public static final MediaType MEDIA_TYPE_JSON = MediaType.parse("application/json; charset=utf-8");
 
   private static final int GET = 0;
@@ -53,11 +40,25 @@ public class ProximityBeaconImpl implements ProximityBeacon {
   private final Activity mActivity;
   private Account account;
   private final OkHttpClient httpClient;
+  private Project mProject;
+  private String mToken;
+  public static final String ACCESS_TOKEN_INFO = "ACCESS_TOKEN_INFO";
+  public static final String ACCESS_TOKEN = "ACCESS_TOKEN";
 
   public ProximityBeaconImpl(Activity mActivity, Account account) {
     this.mActivity = mActivity;
     this.account = account;
     this.httpClient = new OkHttpClient();
+  }
+
+  public ProximityBeaconImpl(Activity mActivity, Project project) {
+    this.mActivity = mActivity;
+    this.httpClient = new OkHttpClient();
+    this.mProject = project;
+  }
+
+  private void getToken(){
+    mToken = mActivity.getSharedPreferences(ACCESS_TOKEN_INFO, Context.MODE_PRIVATE).getString(ACCESS_TOKEN, "");
   }
 
   @Override
@@ -93,7 +94,7 @@ public class ProximityBeaconImpl implements ProximityBeacon {
 
   @Override
   public void registerBeacon(Callback callback, JSONObject requestBody) {
-    new AuthTask("beacons:register", POST, requestBody.toString(), callback).execute();
+    new AuthTask("beacons:register?projectId=" + mProject.getProjectId(), POST, requestBody.toString(), callback).execute();
   }
 
   @Override
@@ -103,12 +104,12 @@ public class ProximityBeaconImpl implements ProximityBeacon {
 
   @Override
   public void batchDeleteAttachments(Callback callback, String beaconName) {
-    new AuthTask(beaconName + "/attachments:batchDelete", POST, "", callback).execute();
+    new AuthTask(beaconName + "/attachments:batchDelete?projectId=" + mProject.getProjectId(), POST, "", callback).execute();
   }
 
   @Override
   public void createAttachment(Callback callback, String beaconName, JSONObject requestBody) {
-    new AuthTask(beaconName + "/attachments", POST, requestBody.toString(), callback).execute();
+    new AuthTask(beaconName + "/attachments?projectId=" + mProject.getProjectId(), POST, requestBody.toString(), callback).execute();
   }
 
   @Override
@@ -128,12 +129,16 @@ public class ProximityBeaconImpl implements ProximityBeacon {
 
   @Override
   public void listNamespaces(Callback callback) {
-    new AuthTask("namespaces", callback).execute();
+    new AuthTask("namespaces?projectId=" + mProject.getProjectId(), callback).execute();
   }
 
   @Override
   public void getEphemeralIdRegistrationParams(Callback callback) {
     new AuthTask("eidparams", callback).execute();
+  }
+
+  public void refreshProject(final Project project) {
+    mProject = project;
   }
 
   private class AuthTask extends AsyncTask<Void, Void, Void> {
@@ -158,65 +163,26 @@ public class ProximityBeaconImpl implements ProximityBeacon {
 
     @Override
     protected Void doInBackground(Void... params) {
-      try {
-        final String token = GoogleAuthUtil.getToken(mActivity, account, SCOPE);
-        Request.Builder requestBuilder = new Request.Builder()
-            .header(AUTHORIZATION, BEARER + token)
-            .url(ENDPOINT + urlPart);
-        switch (method) {
-          case PUT:
-            requestBuilder.put(RequestBody.create(MEDIA_TYPE_JSON, json));
-            break;
-          case POST:
-            requestBuilder.post(RequestBody.create(MEDIA_TYPE_JSON, json));
-            break;
-          case DELETE:
-            requestBuilder.delete(RequestBody.create(MEDIA_TYPE_JSON, json));
-            break;
-          default: break;
-        }
-        Request request = requestBuilder.build();
-        httpClient.newCall(request).enqueue(new HttpCallback(callback));
-      } catch (UserRecoverableAuthException e) {
-        // GooglePlayServices.apk is either old, disabled, or not present
-        // so we need to show the user some UI in the activity to recover.
-        handleAuthException(mActivity, e);
-        Log.e(TAG, "UserRecoverableAuthException", e);
-      } catch (GoogleAuthException e) {
-        // Some other type of unrecoverable exception has occurred.
-        // Report and log the error as appropriate for your app.
-        Log.e(TAG, "GoogleAuthException", e);
-      } catch (IOException e) {
-        // The fetchToken() method handles Google-specific exceptions,
-        // so this indicates something went wrong at a higher level.
-        // TIP: Check for network connectivity before starting the AsyncTask.
-        Log.e(TAG, "IOException", e);
+      //final String token = GoogleAuthUtil.getToken(mActivity, account, SCOPE);
+      getToken();
+      Request.Builder requestBuilder = new Request.Builder()
+              .header(AUTHORIZATION, BEARER + mToken)
+              .url(ENDPOINT + urlPart);
+      switch (method) {
+        case PUT:
+          requestBuilder.put(RequestBody.create(MEDIA_TYPE_JSON, json));
+          break;
+        case POST:
+          requestBuilder.post(RequestBody.create(MEDIA_TYPE_JSON, json));
+          break;
+        case DELETE:
+          requestBuilder.delete(RequestBody.create(MEDIA_TYPE_JSON, json));
+          break;
+        default: break;
       }
+      Request request = requestBuilder.build();
+      httpClient.newCall(request).enqueue(new HttpCallback(callback));
       return null;
-    }
-
-    private void handleAuthException(final Activity activity, final Exception e) {
-      activity.runOnUiThread(new Runnable() {
-        @Override
-        public void run() {
-          if (e instanceof GooglePlayServicesAvailabilityException) {
-            // The Google Play services APK is old, disabled, or not present.
-            // Show a dialog created by Google Play services that allows
-            // the user to update the APK
-            int statusCode = ((GooglePlayServicesAvailabilityException) e).getConnectionStatusCode();
-            Dialog dialog = GooglePlayServicesUtil.getErrorDialog(
-                    statusCode, activity, REQUEST_CODE_RECOVER_FROM_PLAY_SERVICES_ERROR_FOR_PRX_API);
-            dialog.show();
-          } else if (e instanceof UserRecoverableAuthException) {
-            // Unable to authenticate, such as when the user has not yet granted
-            // the app access to the account, but the user can fix this.
-            // Forward the user to an activity in Google Play services.
-            Intent intent = ((UserRecoverableAuthException) e).getIntent();
-            activity.startActivityForResult(
-                    intent, REQUEST_CODE_RECOVER_FROM_PLAY_SERVICES_ERROR_FOR_PRX_API);
-          }
-        }
-      });
     }
 
   }

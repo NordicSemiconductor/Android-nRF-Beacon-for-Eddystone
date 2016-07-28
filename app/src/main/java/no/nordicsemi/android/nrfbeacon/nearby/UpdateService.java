@@ -72,6 +72,7 @@ public class UpdateService extends Service {
     public final static String ACTION_ADVANCED_FACTORY_RESET = "no.nordicsemi.android.nrfbeacon.nearby.ACTION_ADVANCED_FACTORY_RESET";
     public final static String ACTION_ADVANCED_REMAIN_CONNECTABLE = "no.nordicsemi.android.nrfbeacon.nearby.ACTION_ADVANCED_REMAIN_CONNECTABLE";
     public final static String ACTION_UNLOCK_BEACON = "no.nordicsemi.android.nrfbeacon.nearby.ACTION_UNLOCK_BEACON";
+    public final static String ACTION_DISSMISS_UNLOCK = "no.nordicsemi.android.nrfbeacon.nearby.ACTION_DISSMISS_UNLOCK";
     public static final String ACTION_BROADCAST_ALL_SLOT_INFO = "no.nordicsemi.android.nrfbeacon.nearby.ACTION_BROADCAST_ALL_SLOT_INFO";
 
 
@@ -630,6 +631,10 @@ public class UpdateService extends Service {
         public ArrayList<String> getAllSlotInformation() {
             return mActiveSlotsTypes;
         }
+
+        public void setBeaconLockCode(byte[] beaconLockCode) {
+            this.mBeaconLockCode = beaconLockCode;
+        }
     }
 
     @Override
@@ -735,11 +740,13 @@ public class UpdateService extends Service {
                 add(RequestType.READ_CHARACTERISTIC, mUnlockCharacteristic);
                 return;
             case UNLOCKED:
+                broadcastUnlockRequest();
                 mIsBeaconLocked = false;
                 mReadlAllSlots = true;
                 add(RequestType.READ_CHARACTERISTIC, mBroadcastCapabilitesCharacterisitc);
                 break;
             case UNLOCKED_AUTOMATIC_RELOCK_DISABLED:
+                broadcastUnlockRequest();
                 mReadlAllSlots = true;
                 add(RequestType.READ_CHARACTERISTIC, mBroadcastCapabilitesCharacterisitc);
                 mIsBeaconLocked = false;
@@ -907,6 +914,14 @@ public class UpdateService extends Service {
     private void broadcastUnlockRequest(final byte [] challenge) {
         final Intent intent = new Intent(ACTION_UNLOCK_BEACON);
         intent.putExtra(EXTRA_DATA, challenge);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+    }
+
+    /**
+     * Dismiss the unlock key dialog in case the beacon is not locked
+     */
+    private void broadcastUnlockRequest() {
+        final Intent intent = new Intent(ACTION_DISSMISS_UNLOCK);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 

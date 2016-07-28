@@ -45,6 +45,9 @@ public class ProximityApiErrorDialogFragment extends DialogFragment{
     private String mMessage;
     private String mStatus;
 
+    public interface OnHandleError{
+        public void handleAuthorizationError(final String errorCode);
+    }
 
     public static ProximityApiErrorDialogFragment newInstance(final String errorCode, final String message, final String status){
         ProximityApiErrorDialogFragment fragment = new ProximityApiErrorDialogFragment();
@@ -86,6 +89,7 @@ public class ProximityApiErrorDialogFragment extends DialogFragment{
         alertDialog.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                ((OnHandleError)getParentFragment()).handleAuthorizationError(mErrorCode);
                 dismiss();
             }
         });

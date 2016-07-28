@@ -40,8 +40,13 @@
         app:showAsAction="never"
         android:title="@string/action_register_beacon"/>
     <item
-        android:id="@+id/action_update_settings"
+        android:id="@+id/action_switch_projects"
         android:orderInCategory="100"
         app:showAsAction="never"
-        android:title="@string/action_update_settings"/>
+        android:title="@string/action_switch_projects"/>
+    <item
+        android:id="@+id/action_update_about"
+        android:orderInCategory="100"
+        app:showAsAction="never"
+        android:title="@string/action_update_about"/>
 </menu>

@@ -21,7 +21,7 @@
   ~ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   -->
 <resources>
-
+    <string name="server_client_id">YOUR_CLIENT_ID_GOES_HERE</string>
     <string name="app_name">nRF Beacon for Eddystone</string>
     <string name="beacon_feature_title">nRF Beacon for Eddystone</string>
     
@@ -47,7 +47,7 @@
     <string name="action_connect">CONNECT</string>
     <string name="action_disconnect">DISCONNECT</string>
 
-    <string name="grant_nearby_permission">Please grant Nearby permissions!.</string>
+    <string name="grant_bluetooth_permission">Please enable bluetooth to scan for beacons!.</string>
     <string name="no_ble">Device doesn\'t have BLE support!</string>
     <string name="scanning">Scanning&#8230;</string>
     
@@ -173,19 +173,20 @@
     <string name="error_beacon_already_exists">Beacon already exists</string>
     <string name="title_rw_adv_slot">Read Write Advertisement Slot</string>
     <string formaatted="false" name="title_error">Error %d</string>
-    <string name="error_message">Error message</string>
-    <string name="error_status">Error status</string>
+    <string name="error_message">Message:</string>
+    <string name="error_status">Status:</string>
     <string name="title_ecdh_key_info">ECDH Key information</string>
     <string name="action_ecdh_info">ECDH Key info</string>
     <string name="error_generic">Error</string>
     <string name="error_no_ecdh_info">No ECDH Key information are found for this beacon at this moment.</string>
     <string name="no_identity_key">No Identity Key available for this slot</string>
-    <string name="prog_dialog_connect_title">Connecting</string>
+    <string name="prog_dialog_connect_title">Connecting…</string>
     <string name="prog_dialog_connect_message">Please wait while we connect to the beacon.</string>
     <string name="prog_dialog_config_eid_title">Configuring EID Slot</string>
     <string name="writing_rw_adv_slot_char">Writing to read write advertisement slot characteristic.</string>
     <string name="unlock_beacon_title">Unlock Beacon</string>
     <string name="unlock_beacon_message">Please enter the beacon lock code provided by the manufacturer.</string>
+    <string name="unlock_beacon_for_identity_key">Please enter the beacon lock code provided by the manufacturer in order to read the Identity Key.</string>
     <string name="register_beacon_title">Register Beacon</string>
     <string name="register_beacon_message">Registering a EID slot requires creating a UID namespace and an instance id. Once the EID is registered, it will resolve itself to this UID.</string>
     <string name="attachment_data">Data</string>
@@ -215,7 +216,7 @@
     <string name="batt_voltage_unsupported">Unsupported</string>
     <string name="voltage_unit">mV</string>
     <string name="temperature_unit"> \u2103</string>
-    <string name="error_register_proximity_api">Unable to register with proximty API. Please register again from the options menu</string>
+    <string name="error_register_proximity_api">Unable to register with Proximty API. Please register again from the options menu</string>
     <string name="frame_info_title">Frame Info</string>
     <string name="title_config_radio_tx_power">Radio Tx Power</string>
     <string name="eddystone_supported_radio_tx_power">Radio Tx Power</string>
@@ -246,23 +247,25 @@
     <string name="url_empty">URL empty! Please enter a valid URL!</string>
     <string name="url_enter_valid">Please enter a valid value for URL</string>
     <string name="url_enter_valid_network_url">Please enter a valid value for URL!</string>
-    <string name="reconnect_to_proximity">Proximity api client initialised! Please try again</string>
+    <string name="reconnect_to_proximity">Proximity API client initialised! Please try again</string>
     <string name="title_remain_connectable">Remain Connectable</string>
     <string name="action_remain_connectable"> Adv remain connectable</string>
     <string name="slot_information">Slot information</string>
     <string name="retry_beacon_registration">OAuth permission granted for beacon registration! You may now try registering beacons</string>
-    <string name="retry_url_shortner">OAuth permission granted for ULR shortener! You may now try shortening url</string>
+    <string name="retry_url_shortner">OAuth permission granted for ULR shortener! You may now try shortening mRefreshToken</string>
     <string name="ecrypted_tlm">eTLM</string>
     <string name="msg_int_check">Msg. Int. check</string>
     <string name="salt">Salt</string>
     <string name="type_empty">EMPTY</string>
-    <string name="unlock_and_read_all_slots">Unlocking beacon and reading all slot information.</string>
+    <string name="unlock_and_read_all_slots">Unlocking beacon and reading data from all slots.</string>
+    <string name="read_all_slots_title">Reading Slots…</string>
+    <string name="read_all_slots">Reading data from all slots.</string>
     <string name="error_challenge">Beacon unlock challenge returned null. Please try connecting to the beacon again!</string>
     <string name="incorrect_unlock_key">Incorrect unlock key! Please enter the correct lock key provided by the manufacturer.</string>
     <string name="registration_eid_title">Registering EID Beacon</string>
-    <string name="registration_eid_message">Please wait while the EID beacon is registered in the proximity API</string>
-    <string name="registration_uid_title">Registering EID Beacon</string>
-    <string name="registration_uid_message">Please wait while the UID beacon is registered in the proximity API</string>
+    <string name="registration_eid_message">Please wait while the EID beacon is registered in the Proximity API</string>
+    <string name="registration_uid_title">Registering UID Beacon</string>
+    <string name="registration_uid_message">Please wait while the UID beacon is registered in the Proximity API</string>
     <string name="beacon_registration_fail">Unable to register beacon</string>
     <string name="unknown_error">Unknown error</string>
     <string name="fail_eid_configuration">Eid configuration failed!</string>
@@ -275,7 +278,7 @@
     <string name="nrf_beacon_for_eddystone_key">nrf_beacon_for_eddystone</string>
     <string name="nrf5_sdk_for_eddystone_key">nrf5_sdk_for_eddystone</string>
     <string name="nrf5_sdk_for_eddystone">nRF5 SDK for Eddystone</string>
-    <string name="action_update_settings">Setttings</string>
+    <string name="action_update_about">Setttings</string>
     <string name="nrf_beacon_for_eddystone">nRF Beacon for Eddystone</string>
     <string name="tutorial_enabled">Tutorials have been enabled</string>
     <string name="got_it">GOT IT!</string>
@@ -302,4 +305,30 @@
     <string name="about_app">About</string>
     <string name="about_app_key">about_app</string>
     <string name="action_devzone">Developer Zone</string>
+    <string name="project_name">Project Name</string>
+    <string name="project_id">Project ID</string>
+    <string name="google_sign_in">Sign In</string>
+    <string name="sign_in_rationale">Configuring/Registering beacons requires a project to be chosen from the google developer console.
+        These registered beacons will be associated with the selected during beacon registration.
+        This step requires to sign with your google account and any of the user profile information will not be used for any other purpose.</string>
+    <string name="no_projects_available">No projects are available on your google console. Please create a project on your google console and enable the Proximity API.</string>
+    <string name="project_selection">Project Selection</string>
+    <string name="select_project">Select a project from the list to register beacons</string>
+    <string name="please_wait">Please wait!</string>
+    <string name="title_namespace_dialog">Retreiving Namespaces…</string>
+    <string name="message_namespace_dialog">Please wait while project namespaces are being retreived</string>
+    <string name="title_listing_projects">Retreiving Projects…</string>
+    <string name="message_listing_projects">Please wait while projects are being retreived!</string>
+    <string name="action_switch_projects">Switch projects</string>
+    <string name="open_console">Open Developer Console</string>
+    <string name="nearby_api_message">In order to use Nearby Messages API to scan for your beacons, please recompile the app source code from GitHub with your own API key for the project. Please follow the steps described on our GitHub page.</string>
+    <string name="error_server_client_id">Please add the copy paste the OAuth 2.0 client id from your google developer console to server_client_id.</string>
+    <string name="google_sign_in_denied">Please sign in with your google account to register/select projects for beacon registration.</string>
+    <string name="refresh">Refresh</string>
+    <string name="register_attachment_title">Registering Beacon Attachment</string>
+    <string name="register_attachment_message">Please wait while attachment for this beacon is registered.</string>
+    <string name="success_project_selection">A new project has been selected successfully.</string>
+    <string name="api_key_error">Please create a browser API Key on your developer console project in order to use this feature.</string>
+
+
 </resources>

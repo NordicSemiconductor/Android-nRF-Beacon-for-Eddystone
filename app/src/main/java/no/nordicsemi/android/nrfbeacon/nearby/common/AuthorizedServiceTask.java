@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package no.nordicsemi.android.nrfbeacon.nearby;
+package no.nordicsemi.android.nrfbeacon.nearby.common;
 
 import android.accounts.Account;
 import android.app.Activity;
@@ -29,6 +29,8 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 
 import java.io.IOException;
 
+import no.nordicsemi.android.nrfbeacon.nearby.util.Utils;
+
 /**
  * NOP async task that allows us to check if a new user has authorized the app
  * to access their account.
@@ -44,21 +46,28 @@ public class AuthorizedServiceTask extends AsyncTask<Void, Void, String> {
     private final Activity activity;
     private final Account account;
     private String authScope;
+    private int requestType;
 
-    public AuthorizedServiceTask(Activity activity, Account accountName, final String authScope) {
+    public AuthorizedServiceTask(Activity activity, Account accountName, final String authScope, final int requestType) {
         this.activity = activity;
         this.account = accountName;
         this.authScope = authScope;
+        this.requestType = requestType;
     }
 
     @Override
     protected String doInBackground(Void... params) {
         Log.i(TAG, "checking authorization for " + account.name);
         try {
-            final String token = GoogleAuthUtil.getToken(activity, account, authScope);
-            if(token != null){
+            String token = GoogleAuthUtil.getToken(activity, account, authScope);
+                switch (requestType){
+                    case Utils.GET_TOKEN:
+                        break;
+                    case Utils.CLEAR_TOKEN:
+                        GoogleAuthUtil.clearToken(activity, token);
+                        break;
+                }
 
-            }
         } catch (UserRecoverableAuthException e) {
             // GooglePlayServices.apk is either old, disabled, or not present
             // so we need to show the user some UI in the activity to recover.
@@ -66,7 +75,7 @@ public class AuthorizedServiceTask extends AsyncTask<Void, Void, String> {
         } catch (GoogleAuthException e) {
             // Some other type of unrecoverable exception has occurred.
             // Report and log the error as appropriate for your app.
-            Log.w(TAG, "GoogleAuthException: " + e);
+            Log.w(TAG, "GoogleAuthException: " + e.getMessage());
         } catch (IOException e) {
             // The fetchToken() method handles Google-specific exceptions,
             // so this indicates something went wrong at a higher level.

@@ -28,10 +28,13 @@ import android.app.Activity;
 import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -39,6 +42,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -61,16 +65,17 @@ import com.google.android.gms.nearby.Nearby;
 import com.google.android.gms.nearby.messages.Message;
 import com.google.android.gms.nearby.messages.MessageFilter;
 import com.google.android.gms.nearby.messages.MessageListener;
-import com.google.android.gms.nearby.messages.NearbyMessagesStatusCodes;
+import com.google.android.gms.nearby.messages.MessagesOptions;
+import com.google.android.gms.nearby.messages.NearbyPermissions;
 import com.google.android.gms.nearby.messages.Strategy;
-import com.google.android.gms.nearby.messages.SubscribeCallback;
 import com.google.android.gms.nearby.messages.SubscribeOptions;
+import com.google.sample.libproximitybeacon.Project;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 
-import no.nordicsemi.android.nrfbeacon.nearby.AuthorizedServiceTask;
-import no.nordicsemi.android.nrfbeacon.nearby.EddystoneBeaconsAdapter;
+import no.nordicsemi.android.nrfbeacon.nearby.common.AuthorizedServiceTask;
+import no.nordicsemi.android.nrfbeacon.nearby.common.EddystoneBeaconsAdapter;
 import no.nordicsemi.android.nrfbeacon.nearby.MainActivity;
 import no.nordicsemi.android.nrfbeacon.nearby.NearbyBackgroundService;
 import no.nordicsemi.android.nrfbeacon.nearby.R;
@@ -78,6 +83,7 @@ import no.nordicsemi.android.nrfbeacon.nearby.common.BaseFragment;
 import no.nordicsemi.android.nrfbeacon.nearby.common.PermissionRationaleDialogFragment;
 import no.nordicsemi.android.nrfbeacon.nearby.settings.NearbySettingsActivity;
 import no.nordicsemi.android.nrfbeacon.nearby.util.NetworkUtils;
+import no.nordicsemi.android.nrfbeacon.nearby.util.Utils;
 import uk.co.deanwild.materialshowcaseview.MaterialShowcaseView;
 
 public class BeaconsFragment extends BaseFragment implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, PermissionRationaleDialogFragment.PermissionDialogListener {
@@ -86,9 +92,11 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
     public static final String TAG = "BEACON";
     private static final String ACCOUNT_NAME_PREF = "userAccount";
     private static final String SHARED_PREFS_NAME = "nrfNearbyInfo";
-    private static final String NEARBY_MESSAGE = "no.nordicsemi.android.nrfbeacon.nearby.NEARBY_MESSAGE";
+    private static final String NEW_MESSAGE_FOUND = "no.nordicsemi.android.nrfbeacon.nearby.NEW_MESSAGE_FOUND";
+    private static final String MESSAGE_LOST = "no.nordicsemi.android.nrfbeacon.nearby.MESSAGE_LOST";
     public static final String NEARBY_DEVICE_DATA = "NEARBY_DEVICE_DATA";
     private static final String AUTH_PROXIMITY_API = "oauth2:https://www.googleapis.com/auth/userlocation.beacon.registry";
+    private static final String AUTH_SCOPE_CONSOLE_PROJECTS = "oauth2:https://www.googleapis.com/auth/cloud-platform";
 
     private final static int OPEN_ACTIVITY_REQ = 195; // random
     static final int REQUEST_CODE_USER_ACCOUNT = 1002;
@@ -99,54 +107,45 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
     private static final int NOTIFICATION_ID = 1;
     public static final String NEARBY_SETTINGS_HELP = "NEARBY_SETTINGS_HELP";
 
-    public ArrayList<Message> mNearbyDevicesMessageList;
-    private int mSelectedTabPosition = 0;
-    private EddystoneBeaconsAdapter mEddystoneBeaconsAdapter;
-    private ImageView mNearbyPermission;
+    private ImageView mBeaconImage;
     private TextView mNearbyPermissions;
-    private boolean mNearbyPermissionGranted = false;
-    private GoogleApiClient mGoogleApiClient;
-    private boolean mResolvingError;
-    private boolean mScanForNearbyInBackground = false;
-    private PendingIntent mPendingIntent;
-    private Intent mParentIntent;
-    private NotificationManagerCompat mNotificationManager;
-    private Context mContext;
     private ImageView mNearbySettings;
 
-    @Override
-    public void onActivityCreated(final Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-    }
+    private String mAccountName;
 
-    @Override
-    public void onAttach(final Context context) {
-        super.onAttach(context);
-        mContext = context;
+    private int mSelectedTabPosition = 0;
 
-    }
+    private boolean mResolvingError;
+    private boolean mScanForNearbyInBackground = false;
+    private boolean mNearbyPermissionGranted = false;
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        final MainActivity parent = (MainActivity) mContext;
-        parent.setBeaconsFragment(null);
+    public ArrayList<Message> mNearbyDevicesMessageList;
 
-        //deallocating image resources
-        mNearbyPermission.setImageBitmap(null);
-        mNearbyPermission.setImageDrawable(null);
-        if(mNearbySettings != null) {
-            mNearbySettings.setImageBitmap(null);
-            mNearbySettings.setImageDrawable(null);
+    private PendingIntent mPendingIntent;
+    private Intent mParentIntent;
+
+    private Context mContext;
+    private GoogleApiClient mGoogleApiClient;
+    private NotificationManagerCompat mNotificationManager;
+    private EddystoneBeaconsAdapter mEddystoneBeaconsAdapter;
+    private Project mProject;
+
+    private final BroadcastReceiver mBackgroundScanReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+            final Message message = intent.getParcelableExtra(action);
+            switch (action) {
+                case NEW_MESSAGE_FOUND:
+                    updateBeaconsAdapter(message);
+                    break;
+                case MESSAGE_LOST:
+                    removeLostNearbyMessage(message.getContent().toString());
+                    break;
+            }
         }
-        mNearbyPermissions = null;
-        mGoogleApiClient = null;
-        mNotificationManager = null;
-        mPendingIntent = null;
-        mParentIntent = null;
-        mNearbyDevicesMessageList = null;
-        mEddystoneBeaconsAdapter = null;
-    }
+    };
+
 
     @Override
     public void onCreate(final Bundle savedInstanceState) {
@@ -171,13 +170,15 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
         mEddystoneBeaconsAdapter = new EddystoneBeaconsAdapter(getActivity(), mNearbyDevicesMessageList);
         listView.setAdapter(mEddystoneBeaconsAdapter);
         mNearbyPermissions = (TextView) rootView.findViewById(R.id.tvNearbyPermission);
-        mNearbyPermission = (ImageView) rootView.findViewById(R.id.imageView);
+        mBeaconImage = (ImageView) rootView.findViewById(R.id.imageView);
 
         mParentIntent = new Intent(getActivity(), MainActivity.class);
         mNotificationManager = NotificationManagerCompat.from(getActivity());
         mScanForNearbyInBackground = PreferenceManager.getDefaultSharedPreferences(getActivity()).getBoolean(getString(R.string.nearby_settings_key), false);
         mGoogleApiClient = new GoogleApiClient.Builder(getActivity())
-                .addApi(Nearby.MESSAGES_API)
+                .addApi(Nearby.MESSAGES_API,  new MessagesOptions.Builder()
+                        .setPermissions(NearbyPermissions.BLE)
+                        .build())
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .build();
@@ -190,17 +191,16 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
         super.onViewCreated(view, savedInstanceState);
         setHasOptionsMenu(true);
 
-        mNearbyPermissions.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(ensurePermission(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION})) {
-                    getNearbyPermissionStatusAndSubscribe();
-                    mNearbyPermissions.setClickable(false);
-                } else {
-                    Toast.makeText(getActivity(), "Permission have not been granted", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
+    }
+    @Override
+    public void onActivityCreated(final Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+    }
+
+    @Override
+    public void onAttach(final Context context) {
+        super.onAttach(context);
+        mContext = context;
     }
 
     @Override
@@ -230,18 +230,60 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
     @Override
     public void onStart() {
         super.onStart();
-        final String [] permissions = {Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.GET_ACCOUNTS};
-        boolean flag = ensurePermission(permissions);
-        Log.v("BEACON", "Permission flags: " + flag);
+        getMetaData();
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        if(!mScanForNearbyInBackground)
-        {
-            unsubscribe();
-            disconnectFromGoogleApiClient();
+        unsubscribe();
+        disconnectFromGoogleApiClient();
+    }
+
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        final MainActivity parent = (MainActivity) mContext;
+        parent.setBeaconsFragment(null);
+
+        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(mBackgroundScanReceiver);
+
+        //deallocating image resources
+        mBeaconImage.setImageBitmap(null);
+        mBeaconImage.setImageDrawable(null);
+        if(mNearbySettings != null) {
+            mNearbySettings.setImageBitmap(null);
+            mNearbySettings.setImageDrawable(null);
+        }
+        mNearbyPermissions = null;
+        mGoogleApiClient = null;
+        mNotificationManager = null;
+        mPendingIntent = null;
+        mParentIntent = null;
+        mNearbyDevicesMessageList = null;
+        mEddystoneBeaconsAdapter = null;
+    }
+
+    private void getMetaData(){
+        String TAG = "Example Meta-Data";
+        try {
+            ApplicationInfo applicationInfo = getActivity().getPackageManager().getApplicationInfo(getActivity().getPackageName(), PackageManager.GET_META_DATA);
+            Bundle bundle = applicationInfo.metaData;
+            String nearbyApiKey = bundle.getString("com.google.android.nearby.messages.API_KEY");
+            if(!nearbyApiKey.equals(Utils.UTILS_API_KEY)){
+                final String [] permissions = {Manifest.permission.ACCESS_COARSE_LOCATION};
+                boolean flag = ensurePermission(permissions);
+                Log.v("BEACON", "Permission flags: " + flag);
+            } else {
+                mNearbyPermissions.setText(getString(R.string.nearby_api_message));
+            }
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.e(TAG,
+                    "Failed to load meta-data, NameNotFound: " + e.getMessage());
+        } catch (NullPointerException e) {
+            Log.e(TAG,
+                    "Failed to load meta-data, NullPointer: " + e.getMessage());
         }
     }
 
@@ -275,28 +317,6 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
                 else
                     onDestroy();
                 break;
-            case REQUEST_CODE_USER_ACCOUNT:
-                if (resultCode == Activity.RESULT_OK) {
-                    if (data != null) {
-                        final String accountName = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
-                        setUserAccountName(accountName);
-                        // The first time the account tries to contact the beacon service we'll pop a dialog
-                        // asking the user to authorize our activity. Ensure that's handled cleanly here, rather
-                        // than when the scan tries to fetch the status of every beacon within range.
-                        Account [] accountsList = AccountManager.get(getActivity()).getAccounts();
-                        for (Account account : accountsList){
-                            if (accountName.equals(account.name)){
-                                if(NetworkUtils.checkNetworkConnectivity(getActivity()))
-                                    new AuthorizedServiceTask(getActivity(), account, AUTH_PROXIMITY_API).execute();
-                                else
-                                    Toast.makeText(getActivity(), getString(R.string.check_internet_connectivity), Toast.LENGTH_SHORT).show();
-                                break;
-                            }
-                        }
-                    }
-                }
-                connectToGoogleApiClient();
-                break;
             case REQUEST_RESOLVE_ERROR:
                 if(resultCode == Activity.RESULT_OK) {
                     getNearbyPermissionStatusAndSubscribe();
@@ -317,10 +337,6 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
                             if(grantResults[i] == PackageManager.PERMISSION_GRANTED)
                                 onPermissionGranted(Manifest.permission.ACCESS_COARSE_LOCATION);
                             else Toast.makeText(getActivity(), R.string.rationale_permission_denied, Toast.LENGTH_SHORT).show();
-                        } else if (Manifest.permission.GET_ACCOUNTS.equals(permissions[i])){
-                            if(grantResults[i] == PackageManager.PERMISSION_GRANTED)
-                                onPermissionGranted(Manifest.permission.GET_ACCOUNTS);
-                            else Toast.makeText(getActivity(), R.string.rationale_permission_denied, Toast.LENGTH_SHORT).show();
                         }
                     }
                 break;
@@ -336,8 +352,6 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
             if(!isBleEnabled()){
                 enableBle();
             } else connectToGoogleApiClient();
-        } else if (Manifest.permission.GET_ACCOUNTS.equalsIgnoreCase(permission)){
-            selectUserAccount();
         }
     }
 
@@ -350,23 +364,14 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
     public void updateNearbyPermissionStatus(boolean flag){
         mNearbyPermissionGranted = flag;
         if(!mNearbyPermissionGranted) {
-            mNearbyPermission.setVisibility(View.GONE);
+            mBeaconImage.setVisibility(View.GONE);
             mNearbyPermissions.setVisibility(View.VISIBLE);
             mNearbyPermissions.setClickable(true);
         }
         else {
-            mNearbyPermission.setVisibility(View.VISIBLE);
-            mNearbyPermissions.setVisibility(View.GONE);
-        }
-    }
-
-    public void prepareForScanning(){
-        final String [] permissions = {Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.GET_ACCOUNTS};
-        if (ensurePermission(permissions)) {
-            if (!isBleEnabled()) {
-                enableBle();
-                connectToGoogleApiClient();
-            } else connectToGoogleApiClient();
+            mBeaconImage.setVisibility(View.VISIBLE);
+            if(mNearbyPermissions != null)
+                mNearbyPermissions.setVisibility(View.GONE);
         }
     }
 
@@ -385,30 +390,6 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
     private void enableBle() {
         final Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
         startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
-    }
-
-    /**
-     * Selects the primary google account to provide authorization to the proximity api.
-     */
-    private void selectUserAccount() {
-        String accountName = getUserAccountName();
-        if (accountName == null) {
-            String[] accountTypes = new String[]{"com.google"};
-            Intent intent = AccountPicker.newChooseAccountIntent(
-                    null, null, accountTypes, false, null, null, null, null);
-            startActivityForResult(intent, REQUEST_CODE_USER_ACCOUNT);
-        }
-    }
-
-    private String getUserAccountName(){
-        SharedPreferences sharedPreferences = getActivity().getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
-        return sharedPreferences.getString(ACCOUNT_NAME_PREF, null);
-    }
-
-    private void setUserAccountName(final String accountName){
-        SharedPreferences sharedPreferences = getActivity().getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(ACCOUNT_NAME_PREF, accountName).apply();
     }
 
     private void connectToGoogleApiClient(){
@@ -437,7 +418,10 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
                 mGoogleApiClient.connect();
             }
         } else {
-            Nearby.Messages.getPermissionStatus(mGoogleApiClient).setResultCallback(new ResultCallback<Status>() {
+            createShowcaseForNearbySettings();
+            updateNearbyPermissionStatus(true);
+            subscribe();
+            /*Nearby.Messages.getPermissionStatus(mGoogleApiClient).setResultCallback(new ResultCallback<Status>() {
                 @Override
                 public void onResult(@NonNull Status status) {
                     if (status.isSuccess()) {
@@ -453,26 +437,26 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
                         }
                     }
                 }
-            });
+            });*/
         }
     }
 
     private void subscribe() {
-        Log.v(TAG, "Subscribing to beacons");
+
+        readProjectInformation();
+        Log.v(TAG, "Subscribing to beacons with namespace: " + mProject.getProjectNamespace());
+
         MessageFilter filter = new MessageFilter.Builder()
-                .includeNamespacedType("nrf-nearby-1100", "string")
+                //.includeNamespacedType(mProject.getProjectNamespace(), "string")
+                .includeAllMyTypes()
                 .build();
+
         if (!mGoogleApiClient.isConnected()) {
             if (!mGoogleApiClient.isConnecting()) {
                 mGoogleApiClient.connect();
             }
         } else if (!mScanForNearbyInBackground) {
-            SubscribeOptions options = new SubscribeOptions.Builder().setStrategy(Strategy.BLE_ONLY).setCallback(new SubscribeCallback() {
-                @Override
-                public void onExpired() {
-                    Log.v(TAG, "nearby disabled?");
-                }
-            })/*setFilter(filter)*/.build();
+            SubscribeOptions options = new SubscribeOptions.Builder().setStrategy(Strategy.BLE_ONLY).setFilter(filter).build();
             Nearby.Messages.subscribe(mGoogleApiClient, mMessageListener, options).setResultCallback(new ResultCallback<Status>() {
                 @Override
                 public void onResult(@NonNull Status status) {
@@ -486,7 +470,8 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
             });
 
         } else {
-            SubscribeOptions options = new SubscribeOptions.Builder().setStrategy(Strategy.BLE_ONLY).build();
+            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(mBackgroundScanReceiver, createIntentFilters());
+            SubscribeOptions options = new SubscribeOptions.Builder().setStrategy(Strategy.BLE_ONLY).setFilter(filter).build();
             Nearby.Messages.subscribe(mGoogleApiClient, getPendingIntent(), options)
                     .setResultCallback(new ResultCallback<Status>() {
                         @Override
@@ -561,7 +546,7 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
         @Override
         public void onFound(Message message) {
             String nearbyMessage = new String(message.getContent(), Charset.forName("UTF-8"));
-            Log.i(TAG, "Found message via PendingIntent: " + nearbyMessage);
+            Log.i(TAG, "Found message via PendingIntent: " + message.getNamespace());
             displayNotification(message);
         }
 
@@ -645,6 +630,14 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
         return false;
     }
 
+    private void updateBeaconsAdapter(Message message){
+        if (!checkIfnearbyDeviceAlreadyExists(new String(message.getContent(), Charset.forName("UTF-8")))) {
+            Log.i(TAG, "Adding message");
+            mNearbyDevicesMessageList.add(message);
+            updateAdapter(false);
+        }
+    }
+
     private void removeLostNearbyMessage(String nearbyDeviceMessage){
         String message;
         for(int i = 0; i < mNearbyDevicesMessageList.size(); i++){
@@ -668,5 +661,20 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
             updateAdapter(true);
             connectToGoogleApiClient();
         }
+    }
+
+    private IntentFilter createIntentFilters() {
+        final IntentFilter filter = new IntentFilter();
+        filter.addAction(NEW_MESSAGE_FOUND);
+        filter.addAction(MESSAGE_LOST);
+        return filter;
+    }
+
+    public void readProjectInformation() {
+        SharedPreferences sp = getActivity().getSharedPreferences(Utils.PROJECT_INFO, Context.MODE_PRIVATE);
+        final String projectName = sp.getString(Utils.PROJECT_NAME, "");
+        final String projectId = sp.getString(Utils.PROJECT_ID, "");
+        final String projectNamespace = sp.getString(Utils.PROJECT_NAMESPACE, "");
+        mProject = new Project(projectName, projectId, projectNamespace);
     }
 }

@@ -82,9 +82,11 @@ public class UnlockBeaconDialogFragment extends DialogFragment {
                     final String lockCode = mUnlockCode.getText().toString().trim();
                     byte [] beaconLockCode = new byte[16];
                     ParserUtils.setByteArrayValue(beaconLockCode, 0, lockCode);
-                    final byte [] encryptedLockCode = ParserUtils.aes128Encrypt(mChallenge, new SecretKeySpec(beaconLockCode, "AES"));
-                    ((OnBeaconUnlockListener)getParentFragment()).unlockBeacon(encryptedLockCode, beaconLockCode);
+                    byte [] encryptedLockCode = null;
+                    if(mChallenge != null)
+                        encryptedLockCode = ParserUtils.aes128Encrypt(mChallenge, new SecretKeySpec(beaconLockCode, "AES"));
                     dismiss();
+                    ((OnBeaconUnlockListener)getParentFragment()).unlockBeacon(encryptedLockCode, beaconLockCode);
                 }
             }
         });
