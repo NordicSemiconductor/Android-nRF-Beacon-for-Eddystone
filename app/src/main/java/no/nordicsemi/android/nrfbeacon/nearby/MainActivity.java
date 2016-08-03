@@ -21,7 +21,6 @@
  */
 package no.nordicsemi.android.nrfbeacon.nearby;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -33,13 +32,11 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Toast;
 
 import no.nordicsemi.android.nrfbeacon.nearby.beacon.BeaconsFragment;
 import no.nordicsemi.android.nrfbeacon.nearby.update.UpdateFragment;
-import no.nordicsemi.android.nrfbeacon.nearby.util.Utils;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -59,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
         switch (requestCode){
             case REQUEST_RESOLVE_ERROR:
                 if(resultCode == Activity.RESULT_OK){
-                    mBeaconsFragment.updateNearbyPermissionStatus(true);
+                    mBeaconsFragment.updateBlePermissionStatus(true);
                 }
                 else Toast.makeText(this, getString(R.string.rationale_permission_denied), Toast.LENGTH_SHORT).show();
                 break;

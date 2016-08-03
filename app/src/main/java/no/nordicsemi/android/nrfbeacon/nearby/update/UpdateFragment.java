@@ -39,6 +39,8 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.location.LocationManager;
+import android.location.LocationProvider;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -763,9 +765,7 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
         final Activity activity = getActivity();
         final Intent service = new Intent(activity, UpdateService.class);
         mBounnd = activity.bindService(service, mServiceConnection, 0);
-
         mGoogleApiClient.connect();
-
         handleSilentSignIn();
     }
 
@@ -1009,7 +1009,7 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
                             final ScannerFragment scannerFragment = ScannerFragment.getInstance(EDDYSTONE_GATT_CONFIG_SERVICE_UUID);
                             scannerFragment.show(getChildFragmentManager(), null);
                         } else {
-                            showToast("");
+                            showToast(getString(R.string.enable_location_services));
                         }
                     } else {
                         enableBle();
@@ -1858,6 +1858,14 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
     private boolean checkIfVersionIsMarshmallowOrAbove() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M;
     }
+
+    final BroadcastReceiver mLocationProviderChangedReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(final Context context, final Intent intent) {
+            if(!isLocationEnabled())
+                showToast(getString(R.string.enable_location_services));
+        }
+    };
 
     public Project readProjectInformation() {
         SharedPreferences sp = getActivity().getSharedPreferences(Utils.PROJECT_INFO, Context.MODE_PRIVATE);

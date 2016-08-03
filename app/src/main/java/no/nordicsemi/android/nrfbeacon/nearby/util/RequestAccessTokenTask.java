@@ -1,18 +1,14 @@
 package no.nordicsemi.android.nrfbeacon.nearby.util;
 
-import android.accounts.Account;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
 
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.FormEncodingBuilder;
-import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
-
-import org.json.JSONObject;
 
 import no.nordicsemi.android.nrfbeacon.nearby.R;
 

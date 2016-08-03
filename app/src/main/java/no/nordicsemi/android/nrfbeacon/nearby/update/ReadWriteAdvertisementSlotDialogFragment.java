@@ -58,6 +58,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 
 import no.nordicsemi.android.nrfbeacon.nearby.R;
+import no.nordicsemi.android.nrfbeacon.nearby.util.NetworkUtils;
 import no.nordicsemi.android.nrfbeacon.nearby.util.ParserUtils;
 import no.nordicsemi.android.nrfbeacon.nearby.util.Utils;
 
@@ -317,13 +318,15 @@ public class ReadWriteAdvertisementSlotDialogFragment extends DialogFragment {
                         final String url = mUrlTypes.getSelectedItem().toString() + mUrl.getText().toString().trim();
 
                         if (!url.isEmpty()) {
-                            final JSONObject jsonObject = new JSONObject();
-                            try {
-                                jsonObject.put("longUrl", url);
-                                shortenUrl(url);
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
+                            if (NetworkUtils.checkNetworkConnectivity(getActivity())) {
+                                final JSONObject jsonObject = new JSONObject();
+                                try {
+                                    jsonObject.put("longUrl", url);
+                                    shortenUrl(url);
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                            } else Toast.makeText(getActivity(), getString(R.string.check_internet_connectivity), Toast.LENGTH_SHORT).show();
                         }
                         break;
                 }
@@ -548,51 +551,6 @@ public class ReadWriteAdvertisementSlotDialogFragment extends DialogFragment {
                     mUrl.setError(null);
                     final JSONObject json = new JSONObject(response.body().string());
                     mUrlShortText.setText(json.getString("id"));
-
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-
-            }
-        }
-    };
-
-    private final Callback mUrlExpanderCallback = new Callback() {
-        @Override
-        public void onFailure(Request request, IOException e) {
-            Log.v(TAG, "Failure: " + request.toString());
-            if(mProgressDialog != null && mProgressDialog.isShowing())
-                mProgressDialog.dismiss();
-        }
-
-        @Override
-        public void onResponse(Response response) throws IOException {
-            if(mProgressDialog != null && mProgressDialog.isShowing())
-                mProgressDialog.dismiss();
-            if(!response.isSuccessful()){
-                //GoogleAuthUtil.clearToken(getActivity(), token);
-                mUrlShortenerContainer.setVisibility(View.GONE);
-                Toast.makeText(getActivity(), response.body().string(), Toast.LENGTH_SHORT).show();
-            } else {
-                try {
-                    mUrlShortenerContainer.setVisibility(View.VISIBLE);
-                    mUrl.setError(null);
-                    final JSONObject json = new JSONObject(response.body().string());
-                    String url = json.getString("longUrl");
-                    if (url.startsWith("https://www.")) {
-                        url = url.replace("https://www.", "");
-                        mUrlTypes.setSelection(0);
-                    } else if (url.startsWith("http://www.")) {
-                        url = url.replace("http://www.", "");
-                        mUrlTypes.setSelection(1);
-                    } else if (url.startsWith("https://")) {
-                        url = url.replace("https://", "");
-                        mUrlTypes.setSelection(2);
-                    } else if (url.startsWith("https://")) {
-                        url = url.replace("http://", "");
-                        mUrlTypes.setSelection(3);
-                    }
-                    mUrl.setText(url);
 
                 } catch (JSONException e) {
                     e.printStackTrace();

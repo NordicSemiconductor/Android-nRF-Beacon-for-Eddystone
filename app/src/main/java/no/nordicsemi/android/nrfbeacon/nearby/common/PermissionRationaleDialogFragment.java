@@ -58,6 +58,7 @@ public class PermissionRationaleDialogFragment extends DialogFragment implements
 
 	public interface PermissionDialogListener {
 		void onRequestPermission();
+		void onCancelRequestPermission();
 	}
 
 	@Override
@@ -71,11 +72,18 @@ public class PermissionRationaleDialogFragment extends DialogFragment implements
 		return new AlertDialog.Builder(getContext()).setTitle(R.string.rationale_title)
 				.setMessage(mRationaleMessage)
 				.setPositiveButton(R.string.rationale_request, this)
-				.setNegativeButton(R.string.rationale_cancel, null).create();
+				.setNegativeButton(R.string.rationale_cancel, this).create();
 	}
 
 	@Override
 	public void onClick(final DialogInterface dialogInterface, final int i) {
-		((PermissionDialogListener)getParentFragment()).onRequestPermission();
+		switch (i) {
+			case DialogInterface.BUTTON_POSITIVE:
+				((PermissionDialogListener) getParentFragment()).onRequestPermission();
+				break;
+			case DialogInterface.BUTTON_NEGATIVE:
+				((PermissionDialogListener) getParentFragment()).onCancelRequestPermission();
+				break;
+		}
 	}
 }

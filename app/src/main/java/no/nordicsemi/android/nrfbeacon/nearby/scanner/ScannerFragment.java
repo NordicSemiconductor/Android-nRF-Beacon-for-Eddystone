@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.UUID;
 
 import no.nordicsemi.android.nrfbeacon.nearby.R;
+import no.nordicsemi.android.nrfbeacon.nearby.util.Utils;
 import no.nordicsemi.android.support.v18.scanner.BluetoothLeScannerCompat;
 import no.nordicsemi.android.support.v18.scanner.ScanCallback;
 import no.nordicsemi.android.support.v18.scanner.ScanFilter;
@@ -33,7 +34,14 @@ import no.nordicsemi.android.support.v18.scanner.ScanResult;
 import no.nordicsemi.android.support.v18.scanner.ScanSettings;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.Dialog;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothManager;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -136,7 +144,9 @@ public class ScannerFragment extends DialogFragment {
 					if (mIsScanning) {
 						dialog.cancel();
 					} else {
-						startScan();
+						if(isBleEnabled())
+							startScan();
+						else enableBle();
 					}
 				}
 			}
@@ -145,6 +155,18 @@ public class ScannerFragment extends DialogFragment {
 		if (savedInstanceState == null)
 			startScan();
 		return dialog;
+	}
+
+	@Override
+	public void onStart() {
+		super.onStart();
+		getActivity().registerReceiver(mBluetoothStateChange, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
+	}
+
+	@Override
+	public void onStop() {
+		super.onStop();
+		getActivity().unregisterReceiver(mBluetoothStateChange);
 	}
 
 	@Override
@@ -237,4 +259,50 @@ public class ScannerFragment extends DialogFragment {
 			// should never be called
 		}
 	};
+
+	private final BroadcastReceiver mBluetoothStateChange = new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			// This will be executed only once
+			final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.STATE_OFF);
+
+			switch (state) {
+				case BluetoothAdapter.STATE_TURNING_OFF:
+				case BluetoothAdapter.STATE_OFF:
+					stopScan();
+					mAdapter.clearDevices();
+					break;
+			}
+		}
+	};
+
+	/**
+	 * Checks whether the Bluetooth adapter is enabled.
+	 */
+	private boolean isBleEnabled() {
+		final BluetoothManager bm = (BluetoothManager) getActivity().getSystemService(Context.BLUETOOTH_SERVICE);
+		final BluetoothAdapter ba = bm.getAdapter();
+		return ba != null && ba.isEnabled();
+	}
+
+	/**
+	 * Tries to start Bluetooth adapter.
+	 */
+	private void enableBle() {
+		final Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+		startActivityForResult(enableIntent, Utils.REQUEST_ENABLE_BT);
+	}
+
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		switch (requestCode) {
+			case Utils.REQUEST_ENABLE_BT:
+				if (resultCode == Activity.RESULT_OK)
+					startScan();
+				else Toast.makeText(getActivity(), getString(R.string.grant_bluetooth_permission), Toast.LENGTH_SHORT).show();
+				break;
+
+		}
+	}
+
 }

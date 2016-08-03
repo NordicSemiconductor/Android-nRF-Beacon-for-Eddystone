@@ -47,7 +47,7 @@
     <string name="action_connect">CONNECT</string>
     <string name="action_disconnect">DISCONNECT</string>
 
-    <string name="grant_bluetooth_permission">Please enable bluetooth to scan for beacons!.</string>
+    <string name="grant_bluetooth_permission">Please enable bluetooth to scan for beacons.</string>
     <string name="no_ble">Device doesn\'t have BLE support!</string>
     <string name="scanning">Scanning&#8230;</string>
     
@@ -269,7 +269,8 @@
     <string name="beacon_registration_fail">Unable to register beacon</string>
     <string name="unknown_error">Unknown error</string>
     <string name="fail_eid_configuration">Eid configuration failed!</string>
-    <string name="enable_location_services">Please enable location services to scan for devices</string>
+    <string name="enable_location_services">Please enable location services to scan for beacons.</string>
+    <string name="grant_location_permission">Please grant location permission to scan for beacons.</string>
     <string name="tutorial_settings">Tutorial</string>
     <string name="tutorial_settings_summary">The quick how to guide is only displayed at the first launch of the app, but you can enable it here again</string>
     <string name="tutorial_settings_key">tutorial_settings</string>

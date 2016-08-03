@@ -51,6 +51,11 @@ public abstract class BaseFragment extends Fragment implements PermissionRationa
         else checkForUngrantedPermissions(new String [] {Manifest.permission.ACCESS_COARSE_LOCATION});
     }
 
+    @Override
+    public void onCancelRequestPermission() {
+
+    }
+
     /**
      * Method called when user has granted the coarse location permission to the application.
      */
@@ -108,7 +113,4 @@ public abstract class BaseFragment extends Fragment implements PermissionRationa
             }
         }
     }
-
-
-
 }
