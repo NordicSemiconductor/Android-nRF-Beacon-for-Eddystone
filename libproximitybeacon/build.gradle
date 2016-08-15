@@ -19,7 +19,7 @@ android {
 }
 
 dependencies {
-    compile 'com.google.android.gms:play-services-auth:9.2.1'
+    compile 'com.google.android.gms:play-services-auth:9.4.0'
     compile 'com.squareup.okhttp:okhttp:2.4.0'
     compile fileTree(dir: 'libs', include: ['*.jar'])
 }

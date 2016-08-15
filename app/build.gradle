@@ -6,8 +6,8 @@ android {
         applicationId "no.nordicsemi.android.nrfbeacon.nearby"
         minSdkVersion 18
         targetSdkVersion 24
-        versionCode 7
-        versionName '2.1'
+        versionCode 8
+        versionName '2.2'
     }
     buildTypes {
         release {
@@ -29,9 +29,9 @@ dependencies {
     compile 'com.android.support:appcompat-v7:24.0.0'
     compile 'com.android.support:design:24.0.0'
     compile 'no.nordicsemi.android.support.v18:scanner:0.1.1'
-    compile 'com.google.android.gms:play-services-auth:9.2.1'
-    compile 'com.google.android.gms:play-services-nearby:9.2.1'
-    compile 'com.google.android.gms:play-services-location:9.2.1'
+    compile 'com.google.android.gms:play-services-auth:9.4.0'
+    compile 'com.google.android.gms:play-services-nearby:9.4.0'
+    compile 'com.google.android.gms:play-services-location:9.4.0'
     compile 'com.squareup.okhttp:okhttp:2.4.0'
     compile 'com.github.deano2390:MaterialShowcaseView:1.1.0'
     compile 'com.google.apis:google-api-services-urlshortener:v1-rev45-1.22.0'

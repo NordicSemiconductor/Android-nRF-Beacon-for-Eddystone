@@ -299,7 +299,7 @@ public class ScannerFragment extends DialogFragment {
 			case Utils.REQUEST_ENABLE_BT:
 				if (resultCode == Activity.RESULT_OK)
 					startScan();
-				else Toast.makeText(getActivity(), getString(R.string.grant_bluetooth_permission), Toast.LENGTH_SHORT).show();
+				else Toast.makeText(getActivity(), getString(R.string.enable_ble), Toast.LENGTH_SHORT).show();
 				break;
 
 		}

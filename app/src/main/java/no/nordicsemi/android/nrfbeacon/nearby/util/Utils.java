@@ -12,11 +12,7 @@ public class Utils {
 
     public static final String EXTRA_ADAPTER_POSITION = "no.nordicsemi.android.nrfbeacon.extra.adapter_position";
     public static final String TAG = "BEACON";
-    private static final String ACCOUNT_NAME_PREF = "userAccount";
-    private static final String SHARED_PREFS_NAME = "nrfNearbyInfo";
     public static final String NEARBY_DEVICE_DATA = "NEARBY_DEVICE_DATA";
-    private static final String AUTH_PROXIMITY_API = "oauth2:https://www.googleapis.com/auth/userlocation.beacon.registry";
-    public static final String AUTH_SCOPE_CONSOLE_PROJECTS = "oauth2:https://www.googleapis.com/auth/cloud-platform";
     public static final String DISPLAY_NOTIFICATION = "no.nordicsemi.android.nrfbeacon.nearby.DISPLAY_NOTIFICATION";
     public static final String REMOVE_NOTIFICATION = "no.nordicsemi.android.nrfbeacon.nearby.REMOVE_NOTIFICATION";
     public static final String NEW_MESSAGE_FOUND = "no.nordicsemi.android.nrfbeacon.nearby.NEW_MESSAGE_FOUND";

@@ -34,11 +34,9 @@ import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
@@ -83,7 +81,7 @@ import no.nordicsemi.android.nrfbeacon.nearby.settings.NearbySettingsActivity;
 import no.nordicsemi.android.nrfbeacon.nearby.util.Utils;
 import uk.co.deanwild.materialshowcaseview.MaterialShowcaseView;
 
-public class BeaconsFragment extends BaseFragment implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener/*,
+public class BeaconsFragment extends BaseFragment implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener /*,
         PermissionRationaleDialogFragment.PermissionDialogListener*/ {
 
     public static final String EXTRA_ADAPTER_POSITION = "no.nordicsemi.android.nrfbeacon.extra.adapter_position";
@@ -101,7 +99,7 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
     public static final String NEARBY_SETTINGS_HELP = "NEARBY_SETTINGS_HELP";
 
     private ImageView mNearbyImage;
-    private TextView mBlePermissions;
+    private TextView mPermissions;
     private ImageView mNearbySettings;
 
     private int mSelectedTabPosition = 0;
@@ -116,7 +114,7 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
     private Intent mParentIntent;
 
     private Context mContext;
-    private GoogleApiClient mGoogleApiClient;
+    private GoogleApiClient mGoogleApiClient = null;
     private NotificationManagerCompat mNotificationManager;
     private EddystoneBeaconsAdapter mEddystoneBeaconsAdapter;
     private Project mProject;
@@ -160,19 +158,30 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
         mNearbyDevicesMessageList = new ArrayList<>();
         mEddystoneBeaconsAdapter = new EddystoneBeaconsAdapter(getActivity(), mNearbyDevicesMessageList);
         listView.setAdapter(mEddystoneBeaconsAdapter);
-        mBlePermissions = (TextView) rootView.findViewById(R.id.ble_permission);
+        mPermissions = (TextView) rootView.findViewById(R.id.ble_permission);
         mNearbyImage = (ImageView) rootView.findViewById(R.id.img_nearby);
 
         mParentIntent = new Intent(getActivity(), MainActivity.class);
         mNotificationManager = NotificationManagerCompat.from(getActivity());
         mScanForNearbyInBackground = PreferenceManager.getDefaultSharedPreferences(getActivity()).getBoolean(getString(R.string.nearby_settings_key), false);
-        mGoogleApiClient = new GoogleApiClient.Builder(getActivity())
-                .addApi(Nearby.MESSAGES_API,  new MessagesOptions.Builder()
-                        .setPermissions(NearbyPermissions.BLE)
-                        .build())
+       /* mGoogleApiClient = new GoogleApiClient.Builder(getActivity())
+                .addApi(Nearby.MESSAGES_API, new MessagesOptions.Builder().setPermissions(NearbyPermissions.BLE).build())
                 .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .build();
+                //.addOnConnectionFailedListener(this)
+                .enableAutoManage(getActivity(), this)
+                .build();*/
+
+        mPermissions.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                final String message = mPermissions.getText().toString();
+                if(message.equals(getString(R.string.enable_ble))){
+                    if(!isBleEnabled())
+                        enableBle();
+                }
+
+            }
+        });
 
         return rootView;
     }
@@ -252,8 +261,7 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
             mNearbySettings.setImageBitmap(null);
             mNearbySettings.setImageDrawable(null);
         }
-        mBlePermissions = null;
-        mGoogleApiClient = null;
+        mPermissions = null;
         mNotificationManager = null;
         mPendingIntent = null;
         mParentIntent = null;
@@ -277,13 +285,14 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
                         final Intent bluetoothEnable = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                         startActivityForResult(bluetoothEnable, REQUEST_ENABLE_BT);
                     } else {
-                        connectToGoogleApiClient();
+                        updateBlePermissionStatus(true);
+                        //connectToGoogleApiClient();
                     }
                 }
 
 
             } else {
-                mBlePermissions.setText(getString(R.string.nearby_api_message));
+                mPermissions.setText(getString(R.string.nearby_api_message));
             }
         } catch (PackageManager.NameNotFoundException e) {
             Log.e(TAG,
@@ -319,17 +328,20 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
                 }
                 break;
             case REQUEST_ENABLE_BT:
-                if (resultCode == Activity.RESULT_OK)
-                    connectToGoogleApiClient();
-                else {
+                if (resultCode == Activity.RESULT_OK) {
+                    //connectToGoogleApiClient();
+                } else {
                     updateBlePermissionStatus(false);
                 }
                 break;
             case REQUEST_RESOLVE_ERROR:
                 if(resultCode == Activity.RESULT_OK) {
-                    getNearbyPermissionStatusAndSubscribe();
+                    //connectToGoogleApiClient();
                 }
-                else Toast.makeText(getActivity(), getString(R.string.rationale_permission_denied), Toast.LENGTH_SHORT).show();
+                else {
+                    updateNearbyPermissionStatus(false);
+                    Toast.makeText(getActivity(), getString(R.string.grant_location_permission), Toast.LENGTH_SHORT).show();
+                }
                 break;
         }
     }
@@ -360,11 +372,27 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
         // Now, when the permission is granted, we may start scanning for beacons.
         // We bind even if the FAB was clicked.
         if(Manifest.permission.ACCESS_COARSE_LOCATION.equalsIgnoreCase(permission)){
-            if(!isBleEnabled()){
+            /*if(!isBleEnabled()){
                 enableBle();
-            } else connectToGoogleApiClient();
+            } else {
+                updateBlePermissionStatus(true);
+                connectToGoogleApiClient();
+            }*/
+            buildGoogleApiClient();
         } else {
             updateLocationPermissionStatus(false);
+        }
+    }
+
+    private synchronized void buildGoogleApiClient() {
+        if (mGoogleApiClient == null) {
+            mGoogleApiClient = new GoogleApiClient.Builder(getActivity())
+                    .addApi(Nearby.MESSAGES_API/*, new MessagesOptions.Builder()
+                            .setPermissions(NearbyPermissions.BLE)
+                            .build()*/)
+                    .addConnectionCallbacks(this)
+                    .enableAutoManage(getActivity(), this)
+                    .build();
         }
     }
 
@@ -381,21 +409,36 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
     }
 
     public void updateBlePermissionStatus(boolean flag){
-        mNearbyPermissionGranted = flag;
-        if(!mNearbyPermissionGranted) {
-            mBlePermissions.setText(getString(R.string.grant_bluetooth_permission));
-            mBlePermissions.setVisibility(View.VISIBLE);
+        if(!flag) {
+            mPermissions.setText(getString(R.string.enable_ble));
+            mPermissions.setVisibility(View.VISIBLE);
         } else {
-            mBlePermissions.setVisibility(View.GONE);
+            if(mNearbyPermissionGranted)
+                mPermissions.setVisibility(View.GONE);
+            else {
+                updateNearbyPermissionStatus(mNearbyPermissionGranted);
+            }
         }
     }
 
     public void updateLocationPermissionStatus(boolean locationPermissions){
         if(!locationPermissions) {
-            mBlePermissions.setText(getString(R.string.grant_location_permission));
-            mBlePermissions.setVisibility(View.VISIBLE);
+            mPermissions.setText(getString(R.string.grant_location_permission));
+            mPermissions.setVisibility(View.VISIBLE);
         } else {
-            mBlePermissions.setVisibility(View.GONE);
+            if(isBleEnabled())
+                mPermissions.setVisibility(View.GONE);
+            else updateBlePermissionStatus(false);
+        }
+    }
+
+    public void updateNearbyPermissionStatus(boolean flag){
+        mNearbyPermissionGranted = flag;
+        if(!flag) {
+            mPermissions.setText(getString(R.string.grant_nearby_permission));
+            mPermissions.setVisibility(View.VISIBLE);
+        } else {
+            mPermissions.setVisibility(View.GONE);
         }
     }
 
@@ -417,13 +460,15 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
     }
 
     private void connectToGoogleApiClient(){
-        getNearbyPermissionStatusAndSubscribe();
+        checkGoogleApiClientConnectionStateAndSubscribe();
     }
 
     @Override
     public void onConnected(Bundle bundle) {
         Log.v(TAG, "Connected ");
-        getNearbyPermissionStatusAndSubscribe();
+        updateNearbyPermissionStatus(true);
+        subscribe();
+        //connectToGoogleApiClient();
     }
 
     @Override
@@ -432,18 +477,29 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
     }
 
     @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-        Log.v(TAG, "Connection failed: " + connectionResult.getErrorMessage());
+    public void onConnectionFailed(ConnectionResult result) {
+
+        Log.v(TAG, "GoogleApiClient failed");
+        if (result.hasResolution()) {
+            try {
+                result.startResolutionForResult(getActivity(), REQUEST_RESOLVE_ERROR);
+            } catch (IntentSender.SendIntentException e) {
+                e.printStackTrace();
+            }
+        } else {
+            Log.v(TAG, "GoogleApiClient connection failed");
+            updateNearbyPermissionStatus(false);
+        }
     }
 
-    public void getNearbyPermissionStatusAndSubscribe(){
+
+    public void checkGoogleApiClientConnectionStateAndSubscribe(){
         if(mGoogleApiClient != null && !mGoogleApiClient.isConnected()){
             if(!mGoogleApiClient.isConnecting()){
                 mGoogleApiClient.connect();
             }
         } else {
             createShowcaseForNearbySettings();
-            updateBlePermissionStatus(true);
             subscribe();
         }
     }
@@ -452,13 +508,13 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
 
         readProjectInformation();
         Log.v(TAG, "Subscribing to beacons with namespace: " + mProject.getProjectNamespace());
-
+        updateNearbyScanning();
         MessageFilter filter = new MessageFilter.Builder()
                 //.includeNamespacedType(mProject.getProjectNamespace(), "string")
                 .includeAllMyTypes()
                 .build();
 
-        if (!mGoogleApiClient.isConnected()) {
+        if (mGoogleApiClient != null && !mGoogleApiClient.isConnected()) {
             if (!mGoogleApiClient.isConnecting()) {
                 mGoogleApiClient.connect();
             }
@@ -468,10 +524,10 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
                 @Override
                 public void onResult(@NonNull Status status) {
                     if (status.isSuccess()) {
-                        Log.i(TAG, "Subscribed successfully for foreground scanning.");
+                        Log.v(TAG, "Subscribed successfully for foreground scanning.");
                     } else {
-                        Log.i(TAG, "Could not subscribe.");
-                        handleUnsuccessfulNearbyResult(status);
+                        Log.v(TAG, "Could not subscribe.");
+                        //handleUnsuccessfulNearbyResult(status);
                     }
                 }
             });
@@ -484,9 +540,9 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
                         @Override
                         public void onResult(Status status) {
                             if (status.isSuccess()) {
-                                Log.i(TAG, "Subscribed successfully for background scanning.");
+                                Log.v(TAG, "Subscribed successfully for background scanning.");
                             } else {
-                                Log.i(TAG, "Could not subscribe.");
+                                Log.v(TAG, "Could not subscribe.");
                                 handleUnsuccessfulNearbyResult(status);
                             }
                         }
@@ -502,11 +558,11 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
 
     private void disconnectFromGoogleApiClient(){
 
-        if(mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
+        /*if(mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
             unsubscribe();
             mGoogleApiClient.disconnect();
             Log.v(TAG, "is connected? " + mGoogleApiClient.isConnected());
-        }
+        }*/
         mNearbyDevicesMessageList.clear();
         mNotificationManager.cancelAll();
 
@@ -523,7 +579,7 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
     }
 
     private void handleUnsuccessfulNearbyResult(Status status) {
-        Log.i(TAG, "Processing error, status = " + status);
+        Log.v(TAG, "Processing error, status = " + status);
         if (mResolvingError) {
             // Already attempting to resolve an error.
             return;
@@ -534,7 +590,7 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
                         REQUEST_RESOLVE_ERROR);
             } catch (IntentSender.SendIntentException e) {
                 mResolvingError = false;
-                Log.i(TAG, "Failed to resolve error status.", e);
+                Log.v(TAG, "Failed to resolve error status.", e);
             }
         } else {
             if (status.getStatusCode() == CommonStatusCodes.NETWORK_ERROR) {
@@ -553,24 +609,24 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
         @Override
         public void onFound(Message message) {
             String nearbyMessage = new String(message.getContent(), Charset.forName("UTF-8"));
-            Log.i(TAG, "Found message via PendingIntent: " + message.getNamespace());
+            Log.v(TAG, "Found message: " + message.getNamespace());
             displayNotification(message);
         }
 
         @Override
         public void onLost(Message message) {
             String nearbyMessage = new String(message.getContent(), Charset.forName("UTF-8"));
-            Log.i(TAG, "Lost message via PendingIntent: " + nearbyMessage);
+            Log.v(TAG, "Lost message: " + nearbyMessage);
             updateNotification(message);
         }
     };
 
     private void displayNotification(Message message){
         if (!checkIfnearbyDeviceAlreadyExists(new String(message.getContent(), Charset.forName("UTF-8")))) {
-            Log.i(TAG, "Adding message");
+            Log.v(TAG, "Adding message");
             mNearbyDevicesMessageList.add(message);
             updateAdapter(false);
-            Log.i(TAG, "count after adding: " + mNearbyDevicesMessageList.size());
+            Log.v(TAG, "count after adding: " + mNearbyDevicesMessageList.size());
             createNotification();
         }
     }
@@ -611,9 +667,9 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
 
     private void updateNotification(Message message){
         if (checkIfnearbyDeviceAlreadyExists(new String(message.getContent(), Charset.forName("UTF-8")))) {
-            Log.i(TAG, "removing message: " + message);
+            Log.v(TAG, "removing message: " + message);
             removeLostNearbyMessage(new String(message.getContent(), Charset.forName("UTF-8")));
-            Log.i(TAG, "count after removing: " + mNearbyDevicesMessageList.size());
+            Log.v(TAG, "count after removing: " + mNearbyDevicesMessageList.size());
             createNotification();
         }
     }
@@ -639,7 +695,7 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
 
     private void updateBeaconsAdapter(Message message){
         if (!checkIfnearbyDeviceAlreadyExists(new String(message.getContent(), Charset.forName("UTF-8")))) {
-            Log.i(TAG, "Adding message");
+            Log.v(TAG, "Adding message");
             mNearbyDevicesMessageList.add(message);
             updateAdapter(false);
         }
@@ -661,12 +717,12 @@ public class BeaconsFragment extends BaseFragment implements GoogleApiClient.Con
         boolean flag = PreferenceManager.getDefaultSharedPreferences(getActivity()).getBoolean(getString(R.string.nearby_settings_key), false);
         if(mScanForNearbyInBackground != flag){
             mScanForNearbyInBackground = flag;
-            unsubscribe();
-            disconnectFromGoogleApiClient();
+            /*unsubscribe();
+            disconnectFromGoogleApiClient();*/
             mNotificationManager.cancelAll();
             mNearbyDevicesMessageList.clear();
             updateAdapter(true);
-            connectToGoogleApiClient();
+            //connectToGoogleApiClient();
         }
     }
 

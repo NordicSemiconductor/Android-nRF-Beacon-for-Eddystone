@@ -886,6 +886,7 @@ public class UpdateFragment extends BaseFragment implements ScannerFragmentListe
     @Override
     public void onStop() {
         super.onStop();
+        mGoogleApiClient.disconnect();
         if (mBounnd)
             getActivity().unbindService(mServiceConnection);
     }

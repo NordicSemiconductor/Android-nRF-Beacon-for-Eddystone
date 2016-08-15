@@ -56,9 +56,12 @@ public class MainActivity extends AppCompatActivity {
         switch (requestCode){
             case REQUEST_RESOLVE_ERROR:
                 if(resultCode == Activity.RESULT_OK){
-                    mBeaconsFragment.updateBlePermissionStatus(true);
+                    mBeaconsFragment.updateNearbyPermissionStatus(true);
+                    mBeaconsFragment.checkGoogleApiClientConnectionStateAndSubscribe();
+                } else {
+                    mBeaconsFragment.updateNearbyPermissionStatus(false);
+                    Toast.makeText(this, getString(R.string.rationale_permission_denied), Toast.LENGTH_SHORT).show();
                 }
-                else Toast.makeText(this, getString(R.string.rationale_permission_denied), Toast.LENGTH_SHORT).show();
                 break;
             case REQUEST_CODE_RECOVER_FROM_PLAY_SERVICES_ERROR_FOR_PRX_API:
                 if(resultCode == Activity.RESULT_OK){

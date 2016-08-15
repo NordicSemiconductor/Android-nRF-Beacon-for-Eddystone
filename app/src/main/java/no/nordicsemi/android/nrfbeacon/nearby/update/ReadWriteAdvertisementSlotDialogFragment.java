@@ -26,6 +26,7 @@ import android.app.ProgressDialog;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
@@ -74,17 +75,12 @@ public class ReadWriteAdvertisementSlotDialogFragment extends DialogFragment {
     private static final String SLOT_TASK = "SLOT_TASK";
     private static final String ACTIVE_SLOT = "ACTIVE_SLOT";
     private static final String TAG = "BEACON";
-    private static final String ACCOUNT_NAME_PREF = "userAccount";
-    private static final String SHARED_PREFS_NAME = "nrfNearbyInfo";
-    private static final String AUTH_PROXIMITY_API = "oauth2:https://www.googleapis.com/auth/userlocation.beacon.registry";
-    private static final String AUTH_SCOPE_URL_SHORTENER = "oauth2:https://www.googleapis.com/auth/urlshortener";
 
     private static final int EMPTY_SLOT = -1;
     private static final int TYPE_UID = 0x00;
     private static final int TYPE_URL = 0x10;
     private static final int TYPE_TLM = 0x20;
     private static final int TYPE_EID = 0x30;
-
 
     private byte [] mReadWriteAdvSlotData;
     private int mActiveSlot;
@@ -109,6 +105,8 @@ public class ReadWriteAdvertisementSlotDialogFragment extends DialogFragment {
     private int mNewFrameType;
     private Button mButtonNeutral;
     private ProgressDialog mProgressDialog;
+    private boolean mIsUrlExpanded = false;
+    private String mExpandedUrl;
 
     public interface OnReadWriteAdvertisementSlotListener {
         void configureEidSlot(byte[] eidSlotData);
@@ -144,6 +142,7 @@ public class ReadWriteAdvertisementSlotDialogFragment extends DialogFragment {
         }
     }
 
+    @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getActivity());
@@ -218,7 +217,7 @@ public class ReadWriteAdvertisementSlotDialogFragment extends DialogFragment {
                                 } else if (url.startsWith("https://")) {
                                     url = url.replace("https://", "");
                                     mUrlTypes.setSelection(2);
-                                } else if (url.startsWith("https://")) {
+                                } else if (url.startsWith("http://")) {
                                     url = url.replace("http://", "");
                                     mUrlTypes.setSelection(3);
                                 }
@@ -276,6 +275,8 @@ public class ReadWriteAdvertisementSlotDialogFragment extends DialogFragment {
             public void onClick(View v) {
                 if (validateInput()) {
                     byte[] data = getValueFromView();
+                    mIsUrlExpanded = false;
+                    mExpandedUrl = null;
                     switch (mFrameTypes.getSelectedItemPosition()) {
                         case 0:
                             ((OnReadWriteAdvertisementSlotListener) getParentFragment()).configureUidSlot(data);
@@ -342,9 +343,24 @@ public class ReadWriteAdvertisementSlotDialogFragment extends DialogFragment {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
 
-                if(mUrlShortenerContainer.getVisibility() == View.VISIBLE && mUrl.getError() != null) {
-                    mUrl.setError(null);
+                final String url = s.toString();
+
+                if (url.isEmpty()) {
+                    mUrlShortText.setText("");
                     mUrlShortenerContainer.setVisibility(View.GONE);
+                    return;
+                }
+
+                if(mIsUrlExpanded) {
+                    if(!mExpandedUrl.equals(url)){
+                        mUrl.setError(null);
+                        mUrlShortenerContainer.setVisibility(View.GONE);
+                    }
+                } else {
+                    if (mUrlShortenerContainer.getVisibility() == View.VISIBLE) {
+                        mUrl.setError(null);
+                        mUrlShortenerContainer.setVisibility(View.GONE);
+                    }
                 }
             }
 
@@ -389,11 +405,14 @@ public class ReadWriteAdvertisementSlotDialogFragment extends DialogFragment {
                 return true;
             }
 
-            final String urlText = mUrl.getText().toString().trim();
+            String urlText = mUrl.getText().toString().trim();
             if(urlText.isEmpty()){
                 mUrl.setError("Please enter a value for URL");
                 return false;
             }
+
+            urlText = validateUrlText(urlText);
+            mUrl.setText(urlText); //updating the ui in case the user has typed in the url wrong
 
             final String url = mUrlTypes.getSelectedItem().toString().trim() + urlText;
             if (url.isEmpty()) {
@@ -442,7 +461,6 @@ public class ReadWriteAdvertisementSlotDialogFragment extends DialogFragment {
 
     private byte[] getValueFromView() {
         byte [] data = null;
-        int length;
         switch (mNewFrameType) {
             case TYPE_UID:
                 data = new byte[17];
@@ -487,6 +505,21 @@ public class ReadWriteAdvertisementSlotDialogFragment extends DialogFragment {
         return data;
     }
 
+    private String validateUrlText(String url){
+        if (url.startsWith("https://www.")) {
+            url = url.replace("https://www.", "");
+        } else if (url.startsWith("http://www.")) {
+            url = url.replace("http://www.", "");
+        } else if (url.startsWith("https://")) {
+            url = url.replace("https://", "");
+        } else if (url.startsWith("http://")) {
+            url = url.replace("http://", "");
+        } else if(url.startsWith("www.")) {
+            url = url.replace("www.", "");
+        }
+        return url;
+    }
+
     private void updateUi() {
         final int frameType;
         if(mReadWriteAdvSlotData == null || mReadWriteAdvSlotData.length == 0)
@@ -529,37 +562,6 @@ public class ReadWriteAdvertisementSlotDialogFragment extends DialogFragment {
         super.onDetach();
     }
 
-    private final Callback mUrlShortenerCallback = new Callback() {
-        @Override
-        public void onFailure(Request request, IOException e) {
-            Log.v(TAG, "Failure: " + request.toString());
-            if(mProgressDialog != null && mProgressDialog.isShowing())
-                mProgressDialog.dismiss();
-        }
-
-        @Override
-        public void onResponse(Response response) throws IOException {
-            if(mProgressDialog != null && mProgressDialog.isShowing())
-                mProgressDialog.dismiss();
-            if(!response.isSuccessful()){
-                //GoogleAuthUtil.clearToken(getActivity(), token);
-                mUrlShortenerContainer.setVisibility(View.GONE);
-                Toast.makeText(getActivity(), response.body().string(), Toast.LENGTH_SHORT).show();
-            } else {
-                try {
-                    mUrlShortenerContainer.setVisibility(View.VISIBLE);
-                    mUrl.setError(null);
-                    final JSONObject json = new JSONObject(response.body().string());
-                    mUrlShortText.setText(json.getString("id"));
-
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-
-            }
-        }
-    };
-
     private void shortenUrl(final String longUrl){
         if(!Utils.API_KEY.equals(Utils.UTILS_API_KEY)) {
             new Thread(new Runnable() {
@@ -583,6 +585,8 @@ public class ReadWriteAdvertisementSlotDialogFragment extends DialogFragment {
                                 mUrlShortenerContainer.setVisibility(View.VISIBLE);
                                 mUrl.setError(null);
                                 mUrlShortText.setText(urlAttachment.toString());
+                                mIsUrlExpanded = false;
+                                mExpandedUrl = null;
                             }
                         });
                     } catch (IOException ex) {
@@ -628,12 +632,13 @@ public class ReadWriteAdvertisementSlotDialogFragment extends DialogFragment {
                                 } else if (url.startsWith("https://")) {
                                     url = url.replace("https://", "");
                                     mUrlTypes.setSelection(2);
-                                } else if (url.startsWith("https://")) {
+                                } else if (url.startsWith("http://")) {
                                     url = url.replace("http://", "");
                                     mUrlTypes.setSelection(3);
                                 }
+                                mIsUrlExpanded = true;
+                                mExpandedUrl = url;
                                 mUrl.setText(url);
-
                             }
                         });
                     } catch (IOException ex) {

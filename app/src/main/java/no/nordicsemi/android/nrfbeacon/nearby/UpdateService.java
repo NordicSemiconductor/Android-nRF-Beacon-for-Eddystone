@@ -111,10 +111,6 @@ public class UpdateService extends Service {
     public final static int STATE_CONNECTED = 3;
     public final static int STATE_DISCONNECTING = 4;
 
-    public final static int SERVICE_UUID = 1;
-    public final static int SERVICE_MAJOR_MINOR = 2;
-    public final static int SERVICE_CALIBRATION = 3;
-
     public static final UUID EDDYSTONE_GATT_CONFIG_SERVICE_UUID =                   new UUID(0xA3C875008ED34BDFL, 0x8A39A01BEBEDE295L);
     private static final UUID EDDYSTONE_BROADCAST_CAPABILITIES_UUID =               new UUID(0xA3C875018ed34bdfL, 0x8a39a01bebede295L);
     private static final UUID EDDYSTONE_ACTIVE_SLOT_UUID =                          new UUID(0xA3C875028ed34bdfL, 0x8a39a01bebede295L);
