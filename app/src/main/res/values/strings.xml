@@ -68,7 +68,7 @@
     <string name="scanner_subtitle__not_bonded">AVAILABLE DEVICES:</string>
 
     <string name="update_rssi_unit">dBm</string>
-    <string name="update_adv_interval">Adv. Interval</string>
+    <string name="update_adv_interval">Adv. interval</string>
     <string name="update_error_device_not_supported">Required service has not been found. Restart Bluetooth and try again.</string>
     <string name="update_error_other">Error %d occurred.</string>
 
@@ -136,7 +136,7 @@
     <string name="eid_identity_key_length">16 byte key</string>
     <string name="active_slot_title">Active slot</string>
     <string name="select_active_slot">Select active slot</string>
-    <string name="frame_type">Frame type</string>
+    <string name="frame_type">Frame </string>
     <string name="supported_frame_types">Supported frame types</string>
     <string name="clock_value">Clock value</string>
     <string name="eid_data">EID</string>
@@ -148,14 +148,18 @@
     <string name="time_since_reboot">Time since boot</string>
     <string name="lock_state">Current lock state</string>
     <string name="unlock">Unlock</string>
-    <string name="broadcast_capabilities">Broadcast capabilities</string>
+    <string name="broadcast_capabilities">Capabilities</string>
     <string name="ecdh_key">Beacon Public ECDH key:</string>
     <string name="identity_key">EID Identity key:</string>
     <string name="encrypted_identity_key">Encrypted Identity key:</string>
     <string name="decrypted_identity_key">Decrypted Identity key:</string>
-    <string name="action_adertised_tx_power">Advanced Adv. Tx Power</string>
+    <string name="action_adertised_tx_power">Adv. Tx Power (Advanced)</string>
     <string name="action_lock">Lock state</string>
     <string name="action_factory_reset">Factory reset</string>
+    <string name="action_factory_reset_summary">Factory resetting would set the beacon to
+        its default factory state by erasing all data including all EID frames and Identity Keys stored in the beacon. However the unlock key would remain the same.
+        Would you like to proceed?</string>
+    <string name="action_factory_reset_message">Beacon has been successfully reset to its factory settings.</string>
     <string name="enter_lock_code">Lock code</string>
     <string name="lock_code_length">16 byte unlock code</string>
     <string name="action_get_eidr_params">Get EIDR params</string>
@@ -178,7 +182,7 @@
     <string name="title_ecdh_key_info">ECDH Key information</string>
     <string name="action_ecdh_info">ECDH Key info</string>
     <string name="error_generic">Error</string>
-    <string name="error_no_ecdh_info">No ECDH Key information are found for this beacon at this moment.</string>
+    <string name="error_no_ecdh_info">No ECDH Key information are found for this beacon in this slot.</string>
     <string name="no_identity_key">No Identity Key available for this slot</string>
     <string name="prog_dialog_connect_title">Connecting…</string>
     <string name="prog_dialog_connect_message">Please wait while we connect to the beacon.</string>
@@ -200,7 +204,7 @@
     <string name="attachment_siccess">An attachment for this beacon has been created successfully</string>
     <string name="registration_success">Beacon has been registered successfully</string>
     <string name="prog_dialog_reading">Reading</string>
-    <string name="prog_dialog_rw_adv_slot_msg">Reading data from Read Write Adv Slot Characteristic</string>
+    <string name="prog_dialog_rw_adv_slot_msg">Reading data from ADV Slot Characteristic</string>
     <string name="timer_exponent_error_value">Timer exponent should be between 10-15</string>
     <string name="uint8_error">Value does not match UINT8</string>
     <string name="timer_exponent_error">Please enter a value for timer exponent</string>
@@ -248,8 +252,10 @@
     <string name="url_enter_valid">Please enter a valid value for URL</string>
     <string name="url_enter_valid_network_url">Please enter a valid value for URL!</string>
     <string name="reconnect_to_proximity">Proximity API client initialised! Please try again</string>
-    <string name="title_remain_connectable">Remain Connectable</string>
-    <string name="action_remain_connectable"> Adv remain connectable</string>
+    <string name="title_remain_connectable">Advanced Remain Connectable</string>
+    <string name="action_remain_connectable">Remain connectable (Advanced)</string>
+    <string name="remain_connectable">Remain connectable</string>
+    <string name="remain_non_connectable">Remain non-connectable</string>
     <string name="slot_information">Slot information</string>
     <string name="retry_beacon_registration">OAuth permission granted for beacon registration! You may now try registering beacons</string>
     <string name="retry_url_shortner">OAuth permission granted for ULR shortener! You may now try shortening mRefreshToken</string>
@@ -331,6 +337,9 @@
     <string name="register_attachment_message">Please wait while attachment for this beacon is registered.</string>
     <string name="success_project_selection">A new project has been selected successfully.</string>
     <string name="api_key_error">Please create a browser API Key on your developer console project in order to use this feature.</string>
+    <string name="remain_connectable_nop">This operation is not supported by this beacon</string>
+    <string name="error_registration_frame_type">Cannot register URL/TLM/eTLM beacon type</string>
+    <string name="error_registration_empty_frame">Empty slot cannot be registered. Please configure either a EID/UID slot to register!</string>
 
 
 </resources>

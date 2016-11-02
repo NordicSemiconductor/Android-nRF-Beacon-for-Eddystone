@@ -36,7 +36,6 @@ public class ProximityBeaconImpl implements ProximityBeacon {
   private static final int PUT = 1;
   private static final int POST = 2;
   private static final int DELETE = 3;
-
   private final Activity mActivity;
   private Account account;
   private final OkHttpClient httpClient;

@@ -62,7 +62,7 @@
             android:icon="@drawable/ic_feature"
             android:label="@string/beacon_feature_title"
             android:launchMode="singleTop"
-            android:windowSoftInputMode="stateAlwaysHidden">
+            android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

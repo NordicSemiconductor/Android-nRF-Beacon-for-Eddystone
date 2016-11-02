@@ -30,13 +30,27 @@
     android:paddingBottom="@dimen/alert_dialog_padding_bottom"
     android:paddingTop="@dimen/alert_dialog_padding_top">
 
-    <android.support.v7.widget.SwitchCompat
-        android:id="@+id/remain_connectable"
+    <TextView
+        android:id="@+id/tv_remain_connnectable_message"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/row_height"
-        android:checked="true"
-        android:textColor="?android:attr/textColorTertiary"
-        android:padding="@dimen/feature_section_padding"
-        android:text="@string/eddystone_remain_connectable" />
+        android:layout_height="wrap_content"
+        android:text="@string/remain_connectable_nop"
+        android:visibility="gone"/>
 
+    <RadioGroup
+        android:id="@+id/rg_remain_connectable"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone">
+        <RadioButton
+            android:id="@+id/rb_remain_connectable"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/remain_connectable" />
+        <RadioButton
+            android:id="@+id/rb_remain_non_connectable"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/remain_non_connectable" />
+    </RadioGroup>
 </LinearLayout>

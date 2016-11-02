@@ -109,7 +109,6 @@ public class MainActivity extends AppCompatActivity {
 
                         break;
                     case 1:
-                        //mUpdateFragment.ensurePermissionGranted(new String[]{Manifest.permission.GET_ACCOUNTS});
                         break;
                 }
             }

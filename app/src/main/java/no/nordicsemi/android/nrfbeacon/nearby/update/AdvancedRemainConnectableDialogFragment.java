@@ -26,47 +26,37 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.widget.SwitchCompat;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.EditText;
-
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.spec.SecretKeySpec;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import no.nordicsemi.android.nrfbeacon.nearby.R;
-import no.nordicsemi.android.nrfbeacon.nearby.util.ParserUtils;
 
 /**
  * Created by rora on 07.03.2016.
  */
-public class RemainConnectableDialogFragment extends DialogFragment {
+public class AdvancedRemainConnectableDialogFragment extends DialogFragment {
 
-    private static final String PATTERN_TX_POWER = "[0-9a-fA-F]{32}";
     private static final String REMAIN_CONNECTABLE_FLAG = "REMAIN_CONNECTABLE_FLAG";
-    private static final String TAG = "BEACON";
     private boolean mRemainConnectableFlag;
+    private boolean mRemainConnectable;
 
-    public interface OnBeaconUnlockListener {
-        void unlockBeacon(byte[] encryptedLockCode, final byte[] beaconLockCode);
+    public interface OnAdvancedRemainConnectableStateListener {
+        void onRemainConntable(boolean remainConnectable);
     }
 
-    public static RemainConnectableDialogFragment newInstance(final boolean flag){
-        RemainConnectableDialogFragment fragment = new RemainConnectableDialogFragment();
+    public static AdvancedRemainConnectableDialogFragment newInstance(final boolean flag){
+        AdvancedRemainConnectableDialogFragment fragment = new AdvancedRemainConnectableDialogFragment();
         final Bundle args = new Bundle();
         args.putBoolean(REMAIN_CONNECTABLE_FLAG, flag);
         fragment.setArguments(args);
         return fragment;
     }
 
-    public RemainConnectableDialogFragment(){
+    public AdvancedRemainConnectableDialogFragment(){
 
     }
 
@@ -86,12 +76,30 @@ public class RemainConnectableDialogFragment extends DialogFragment {
         final AlertDialog alertDialog = alertDialogBuilder.setView(view).setPositiveButton(getString(R.string.ok), null).setNegativeButton(getString(R.string.cancel), null).show();
         alertDialog.setCanceledOnTouchOutside(false);
 
-        final SwitchCompat switchCompat = (SwitchCompat) view.findViewById(R.id.remain_connectable);
-        switchCompat.setChecked(mRemainConnectableFlag);
+        final RadioGroup remainConnectableRadioGroup = (RadioGroup) view.findViewById(R.id.rg_remain_connectable);
+        final RadioButton remainConnectable = (RadioButton) view.findViewById(R.id.rb_remain_connectable);
+        final RadioButton remainNonConnectable = (RadioButton) view.findViewById(R.id.rb_remain_non_connectable);
+        final TextView message = (TextView) view.findViewById(R.id.tv_remain_connnectable_message);
+
+        if(mRemainConnectableFlag)
+            remainConnectableRadioGroup.setVisibility(View.VISIBLE);
+        else
+            message.setVisibility(View.VISIBLE);
 
         alertDialog.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if(mRemainConnectableFlag) {
+                    if (remainConnectable.isChecked()) {
+                        ((AdvancedRemainConnectableDialogFragment.OnAdvancedRemainConnectableStateListener) getParentFragment()).onRemainConntable(true);
+                    }
+                    else if(remainNonConnectable.isChecked()) {
+                        ((AdvancedRemainConnectableDialogFragment.OnAdvancedRemainConnectableStateListener) getParentFragment()).onRemainConntable(false);
+                    } else {
+                        Toast.makeText(getActivity(), "Please select an option to proceed", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                }
                 dismiss();
             }
         });

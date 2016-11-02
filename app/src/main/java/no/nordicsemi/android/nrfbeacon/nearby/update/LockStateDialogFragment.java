@@ -35,6 +35,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.nio.charset.Charset;
 import java.util.Arrays;
 
 import javax.crypto.spec.SecretKeySpec;
@@ -120,6 +121,8 @@ public class LockStateDialogFragment extends DialogFragment {
                         mOldLockCodeContainer.setVisibility(View.VISIBLE);
                         mTitleNewLockCode.setVisibility(View.VISIBLE);
                         mNewLockCodeContainer.setVisibility(View.VISIBLE);
+                        if(mUnlockCode != null && mUnlockCode.length >0)
+                            mOldLockCode.setText(ParserUtils.bytesToHex(mUnlockCode, false));
                         break;
                     case 2:
                         mTitleOldLockCode.setVisibility(View.GONE);

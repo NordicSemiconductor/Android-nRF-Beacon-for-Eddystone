@@ -21,14 +21,14 @@
         android:title="@string/action_lock"
         app:showAsAction="never"/>
     <item
+        android:id="@+id/action_factory_reset"
+        android:title="@string/action_factory_reset"
+        app:showAsAction="never"/>
+    <item
         android:id="@+id/action_remain_connectable"
         android:orderInCategory="100"
         app:showAsAction="never"
         android:title="@string/action_remain_connectable"/>
-    <item
-        android:id="@+id/action_factory_reset"
-        android:title="@string/action_factory_reset"
-        app:showAsAction="never"/>
     <item
         android:id="@+id/action_ecdh_info"
         android:orderInCategory="100"

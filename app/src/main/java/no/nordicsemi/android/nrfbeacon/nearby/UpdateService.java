@@ -102,6 +102,8 @@ public class UpdateService extends Service {
     public static final int UNLOCKED = 0x01;
     public static final int UNLOCKED_AUTOMATIC_RELOCK_DISABLED = 0x02;
 
+    public static final byte [] FACTORY_RESET = new byte[]{0x0B};
+
     public final static int ERROR_UNSUPPORTED_DEVICE = -1;
 
     private int mConnectionState;
@@ -147,6 +149,7 @@ public class UpdateService extends Service {
     private boolean mConfigureSlot = false;
     private boolean mReadlAllSlots = false;
     private int mSlotCounter = 0;
+    private int mActiveSlot = -1;
 
     private int mMaxSlots = -1;
     private int mMaxEidSlots = -1;
@@ -157,7 +160,7 @@ public class UpdateService extends Service {
 
         @Override
         public void onConnectionStateChange(final BluetoothGatt gatt, final int status, final int newState) {
-            if (status != BluetoothGatt.GATT_SUCCESS) {
+            if (status != BluetoothGatt.GATT_SUCCESS && status != 19) {
                 Log.v("BEACON", "Connection state change error: " + status);
                 broadcastError(status);
                 return;
@@ -261,9 +264,9 @@ public class UpdateService extends Service {
             } else if (EDDYSTONE_READ_WRITE_ADV_SLOT_UUID.equals(characteristic.getUuid())) {
                 startReadingCharacteristicsForActiveSlot();
             } else if (mAdvancedFactoryResetCharacteristic != null && EDDYSTONE_ADVANCED_FACTORY_RESET_UUID.equals(characteristic.getUuid())) {
-                broadcastAdvancedFactoryReset(characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0));
+                broadcastAdvancedFactoryReset();
             } else if (mAdvancedRemainConnectableCharacteristic != null && EDDYSTONE_ADVANCED_REMAIN_CONNECTABLE_UUID.equals(characteristic.getUuid())) {
-                add(RequestType.READ_CHARACTERISTIC, mAdvancedFactoryResetCharacteristic);
+                add(RequestType.READ_CHARACTERISTIC, mAdvancedRemainConnectableCharacteristic);
             }
             processNext();
         }
@@ -280,18 +283,13 @@ public class UpdateService extends Service {
                 broadcastBeaconCapabilities(characteristic.getValue());
                 startReadingAllActiveSlots(characteristic.getValue());
             } else if (EDDYSTONE_ACTIVE_SLOT_UUID.equals(characteristic.getUuid())) {
-                if(mReadlAllSlots){
-                    mSlotCounter = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
-                    if(mSlotCounter <= mMaxSlots - 1) {
-                        add(RequestType.READ_CHARACTERISTIC, mReadWriteAdvSlotCharacteristic);
-                    } else stopReadingAllActiveSlots();
-                } else	broadcastActiveSlot(characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0));
+                handleSlotReading(characteristic);
             } else if (EDDYSTONE_ADVERTISING_INTERVAL_UUID.equals(characteristic.getUuid())) {
                 broadcastAdvertisingInterval(ParserUtils.getIntValue(characteristic.getValue(), 0, ParserUtils.FORMAT_UINT16_BIG_INDIAN));
             } else if (EDDYSTONE_RADIO_TX_POWER_UUID.equals(characteristic.getUuid())) {
                 broadcastRadioTxPower(characteristic.getValue());
             } else if (EDDYSTONE_ADVANCED_ADVERTISED_TX_POWER_UUID.equals(characteristic.getUuid())) {
-                broadcastAdvancedAdvertisedTxPower(characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0));
+                broadcastAdvancedAdvertisedTxPower(characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_SINT8, 0));
             } else if (EDDYSTONE_LOCK_STATE_UUID.equals(characteristic.getUuid())) {
                 Log.v("Beacon", "Lock state: " + ParserUtils.getIntValue(characteristic.getValue(), 0, BluetoothGattCharacteristic.FORMAT_UINT8));
                 broadcastLockState(ParserUtils.getIntValue(characteristic.getValue(), 0, BluetoothGattCharacteristic.FORMAT_UINT8));
@@ -309,6 +307,38 @@ public class UpdateService extends Service {
             processNext();
         }
     };
+
+    /**
+     * This method will iterate through all slots to read the frame type of each slot and broadcast to the UI.
+     *
+     * @param characteristic active slot characteristic
+     */
+    private void handleSlotReading(final BluetoothGattCharacteristic characteristic){
+        if(mReadlAllSlots){
+            mSlotCounter = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+            if(mActiveSlot == -1){
+                mActiveSlot = mSlotCounter;
+                if(mActiveSlot > 0){
+                    //switch the active slot to 0th one to start iterate through all slots
+                    if(mActiveSlotCharacteristic.setValue(new byte [] {0})) {
+                        add(RequestType.WRITE_CHARACTERISTIC, mActiveSlotCharacteristic);
+                    }
+                } else {
+                    if (mSlotCounter <= mMaxSlots - 1) {
+                        add(RequestType.READ_CHARACTERISTIC, mReadWriteAdvSlotCharacteristic);
+                    }
+                }
+            } else {
+                if (mSlotCounter <= mMaxSlots - 1) {
+                    add(RequestType.READ_CHARACTERISTIC, mReadWriteAdvSlotCharacteristic);
+                } else {
+                    stopReadingAllActiveSlots();
+                }
+            }
+        } else{
+            broadcastActiveSlot(characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0));
+        }
+    }
 
 
     public class ServiceBinder extends Binder {
@@ -631,6 +661,25 @@ public class UpdateService extends Service {
         public void setBeaconLockCode(byte[] beaconLockCode) {
             this.mBeaconLockCode = beaconLockCode;
         }
+
+        public void factoryReset() {
+            final BluetoothGattCharacteristic characteristic = mAdvancedFactoryResetCharacteristic;
+            if (characteristic != null) {
+                characteristic.setValue(new byte[]{0x0B});
+                add(RequestType.WRITE_CHARACTERISTIC, characteristic);
+            }
+        }
+
+        public void configureRemainConntableState(boolean remainConnectable) {
+            final BluetoothGattCharacteristic characteristic = mAdvancedRemainConnectableCharacteristic;
+            if (characteristic != null) {
+                if(remainConnectable)
+                    characteristic.setValue(new byte[]{1});
+                else
+                    characteristic.setValue(new byte[]{0});
+                add(RequestType.WRITE_CHARACTERISTIC, characteristic);
+            }
+        }
     }
 
     @Override
@@ -749,7 +798,6 @@ public class UpdateService extends Service {
                 break;
         }
 
-
         final Intent intent = new Intent(ACTION_LOCK_STATE);
         intent.putExtra(EXTRA_DATA, lockState);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
@@ -775,14 +823,17 @@ public class UpdateService extends Service {
 
     private void broadcastReadWriteAdvSlot(final byte [] readWriteAdvSlot) {
         final Intent intent = new Intent(ACTION_READ_WRITE_ADV_SLOT);
-        if(readWriteAdvSlot == null || readWriteAdvSlot.length == 0){
+        if(readWriteAdvSlot == null || readWriteAdvSlot.length == 0 || readWriteAdvSlot.length == 1){
             if(mReadlAllSlots) {
                 mActiveSlotsTypes.add("EMPTY");
                 mSlotCounter = mSlotCounter + 1 ;
                 if(mSlotCounter <= mMaxSlots - 1) {
-                    if (mActiveSlotCharacteristic.setValue(new byte[]{(byte) mSlotCounter}))
+                    if (mActiveSlotCharacteristic.setValue(new byte[]{(byte) mSlotCounter})) {
                         add(RequestType.WRITE_CHARACTERISTIC, mActiveSlotCharacteristic);
-                } else stopReadingAllActiveSlots();
+                    }
+                } else {
+                    stopReadingAllActiveSlots();
+                }
             } else {
                 intent.putExtra(EXTRA_FRAME_TYPE, EMPTY_SLOT);
                 intent.putExtra(EXTRA_DATA, readWriteAdvSlot);
@@ -790,6 +841,7 @@ public class UpdateService extends Service {
             }
             return;
         }
+
         final int frameType = ParserUtils.getIntValue(readWriteAdvSlot, 0, BluetoothGattCharacteristic.FORMAT_UINT8);
 
         switch (frameType){
@@ -800,7 +852,9 @@ public class UpdateService extends Service {
                     if(mSlotCounter <= mMaxSlots - 1 ) {
                         if (mActiveSlotCharacteristic.setValue(new byte[]{(byte) mSlotCounter}))
                             add(RequestType.WRITE_CHARACTERISTIC, mActiveSlotCharacteristic);
-                    } else stopReadingAllActiveSlots();
+                    } else {
+                        stopReadingAllActiveSlots();
+                    }
                     return;
                 }
                 intent.putExtra(EXTRA_FRAME_TYPE, frameType);
@@ -814,9 +868,12 @@ public class UpdateService extends Service {
                     mActiveSlotsTypes.add("URL");
                     mSlotCounter = mSlotCounter + 1 ;
                     if(mSlotCounter <= mMaxSlots - 1 ) {
-                        if (mActiveSlotCharacteristic.setValue(new byte[]{(byte) mSlotCounter}))
+                        if (mActiveSlotCharacteristic.setValue(new byte[]{(byte) mSlotCounter})) {
                             add(RequestType.WRITE_CHARACTERISTIC, mActiveSlotCharacteristic);
-                    } else stopReadingAllActiveSlots();
+                        }
+                    } else {
+                        stopReadingAllActiveSlots();
+                    }
                     return;
                 }
 
@@ -830,9 +887,12 @@ public class UpdateService extends Service {
                     mActiveSlotsTypes.add("TLM");
                     mSlotCounter = mSlotCounter + 1 ;
                     if(mSlotCounter <= mMaxSlots - 1 ) {
-                        if (mActiveSlotCharacteristic.setValue(new byte[]{(byte) mSlotCounter}))
+                        if (mActiveSlotCharacteristic.setValue(new byte[]{(byte) mSlotCounter})) {
                             add(RequestType.WRITE_CHARACTERISTIC, mActiveSlotCharacteristic);
-                    } else stopReadingAllActiveSlots();
+                        }
+                    } else {
+                        stopReadingAllActiveSlots();
+                    }
                     return;
                 }
 
@@ -854,10 +914,12 @@ public class UpdateService extends Service {
                 }
 
                 final float temp = ParserUtils.decode88FixedPointNotation(readWriteAdvSlot, 4);
-                if (temp > -128.0f)
+                if (temp > -128.0f) {
                     intent.putExtra(EXTRA_BEACON_TEMPERATURE, String.valueOf(temp) + getString(R.string.temperature_unit));
-                else
+                }
+                else {
                     intent.putExtra(EXTRA_BEACON_TEMPERATURE, getString(R.string.temperature_unsupported));
+                }
 
                 intent.putExtra(EXTRA_PDU_COUNT, String.valueOf(ParserUtils.decodeUint32BigEndian(readWriteAdvSlot, 6)));
                 intent.putExtra(EXTRA_TIME_SINCE_BOOT,  String.valueOf(ParserUtils.decodeUint32BigEndian(readWriteAdvSlot, 10) * 100));
@@ -868,10 +930,13 @@ public class UpdateService extends Service {
                 if(mReadlAllSlots) {
                     mActiveSlotsTypes.add("EID");
                     mSlotCounter = mSlotCounter + 1 ;
-                    if(mSlotCounter <= mMaxSlots - 1)
-                        if (mActiveSlotCharacteristic.setValue(new byte[]{(byte) mSlotCounter}))
+                    if(mSlotCounter <= mMaxSlots - 1) {
+                        if (mActiveSlotCharacteristic.setValue(new byte[]{(byte) mSlotCounter})) {
                             add(RequestType.WRITE_CHARACTERISTIC, mActiveSlotCharacteristic);
-                        else stopReadingAllActiveSlots();
+                        }
+                    } else {
+                        stopReadingAllActiveSlots();
+                    }
                     return;
                 }
                 add(RequestType.READ_CHARACTERISTIC, mPublicEcdhKeyCharacteristic);
@@ -886,9 +951,8 @@ public class UpdateService extends Service {
         }
     }
 
-    private void broadcastAdvancedFactoryReset(final int factoryReset) {
+    private void broadcastAdvancedFactoryReset() {
         final Intent intent = new Intent(ACTION_ADVANCED_FACTORY_RESET);
-        intent.putExtra(EXTRA_DATA, factoryReset);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
@@ -940,7 +1004,9 @@ public class UpdateService extends Service {
         mReadlAllSlots = false;
         mSlotCounter = 0;
         mStartReadingInitialCharacteristics = true;
-        if(mActiveSlotCharacteristic.setValue(new byte [] {(byte) mSlotCounter})) {
+        broadcastAllSlotInformation();
+        //Switching back to the original slot that the beacon was in after iterating through all slots
+        if(mActiveSlotCharacteristic.setValue(new byte [] {(byte) mActiveSlot})) {
             add(RequestType.WRITE_CHARACTERISTIC, mActiveSlotCharacteristic);
             startReadingCharacteristicsForActiveSlot();
         }

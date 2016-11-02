@@ -45,7 +45,9 @@ import no.nordicsemi.android.nrfbeacon.nearby.util.ParserUtils;
  */
 public class RadioTxPowerDialogFragment extends DialogFragment {
 
-    private static final String PATTERN_TX_POWER = "(-?\\d{1,3}(|$))+";
+    private static final String PATTERN_TX_POWER = "^-?\\d{1,3}$";
+    private static final int MIN_TX_POWER = -100;
+    private static final int MAX_TX_POWER = 20;
     private static final int IS_VARIABLE_TX_POWER_SUPPORTED = 0x02;
     private static final String RADIO_TX_POWER = "RADIO_TX_POWER";
     private static final String ADVANCED_ADV_TX_POWER = "ADVANCED_ADV_TX_POWER";
@@ -178,7 +180,13 @@ public class RadioTxPowerDialogFragment extends DialogFragment {
             return false;
         } else {
             if (!txPower.matches(PATTERN_TX_POWER)) {
-                radioTxPower.setError("Please enter a valid value for Radio Tx power");
+                radioTxPower.setError("Please enter a valid value for Radio Tx power between -100 and +20");
+                return false;
+            }
+
+            final int txPowerVal = Integer.parseInt(txPower);
+            if(txPowerVal < MIN_TX_POWER || txPowerVal > MAX_TX_POWER ){
+                radioTxPower.setError("Please enter a valid value for Radio Tx power between -100 and +20");
                 return false;
             }
         }
