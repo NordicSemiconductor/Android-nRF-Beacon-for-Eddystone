@@ -21,7 +21,7 @@ import uk.co.deanwild.materialshowcaseview.PrefsManager;
 public class UpdateSettingsFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener, Preference.OnPreferenceClickListener {
 
     private static final String GITHUB_APP_URL = "https://github.com/NordicSemiconductor/Android-nRF-Beacon-for-Eddystone";
-    private static final String GITHUB_FIRMWARE_URL = "https://github.com/NordicSemiconductor/nrf5-sdk-for-eddystone";
+    private static final String GITHUB_FIRMWARE_URL = "https://github.com/NordicPlayground/nrf5-sdk-for-eddystone";
 
     @Override
     public void onCreate(final Bundle savedInstanceState) {

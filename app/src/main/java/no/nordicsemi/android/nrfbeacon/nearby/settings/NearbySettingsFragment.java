@@ -36,7 +36,7 @@ import uk.co.deanwild.materialshowcaseview.PrefsManager;
 public class NearbySettingsFragment extends PreferenceFragment {
 
 	private static final String GITHUB_APP_URL = "https://github.com/NordicSemiconductor/Android-nRF-Beacon-for-Eddystone";
-	private static final String GITHUB_FIRMWARE_URL = "https://github.com/NordicSemiconductor/nrf5-sdk-for-eddystone";
+	private static final String GITHUB_FIRMWARE_URL = "https://github.com/NordicPlayground/nrf5-sdk-for-eddystone";
 	private boolean mBackgroundScanningEnabled;
 
 	@Override

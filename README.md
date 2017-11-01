@@ -21,7 +21,7 @@ The basic features of the application includes
 
 This application goes hand in hand with the nRF5 SDK for Eddystone posted on Github on the following link. This link also contain a complete how to guide and the new Eddystone GATT configuration specs. Please note that some of the advanced characteristics are not supported on the firmware application and will be implemented in the near future.
 
-https://github.com/NordicSemiconductor/nrf5-sdk-for-eddystone
+https://github.com/NordicPlayground/nrf5-sdk-for-eddystone
 
 The nRF Beacon for Eddystone application is available on Playstore on the following link.
 
