@@ -1,4 +1,9 @@
-# Android-nRF-Beacon-for-Eddystone
+## Deprecated!
+
+Due to shutting down the Proximity Beacons API by Google this project has also been deprecated.
+
+# nRF Beacon for Eddystone
+
 nRF Beacon for Eddystone is an application that supports the new Eddystone GATT configuration service allowing users to configure your beacon to advertise all types of Eddystone frame types from UID, URL, TLM and the newest EID and eTLM frame types. In addition the application uses Nearby API for scanning Eddystone beacons in close proximity and Google Proximity API to register UID, EID beacons and create attachments for them on the Proximity API cloud.
 
 ## Features
